@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+/*
+ * Gomgom design system — tokens from gomgom-stitch-prompts.md PROMPT 0.
+ * Light theme is primary; dark variant is optional (v1.1).
+ */
+@theme {
+  --color-background: #f8faf9;
+  --color-surface: #ffffff;
+  --color-border: #e7ecea;
+
+  --color-primary: #16a36a;
+  --color-primary-hover: #128a57;
+  --color-accent: #ff7a1a;
+
+  --color-text-primary: #0f1b16;
+  --color-text-secondary: #5b6b63;
+
+  --color-success: #16a36a;
+  --color-warning: #e9a100;
+  --color-danger: #e5484d;
+
+  /* Store accent chips */
+  --color-store-bhx: #0072bc;
+  --color-store-mm: #e2231a;
+  --color-store-lotte: #ed1c24;
+  --color-store-gobigc: #e30613;
+  --color-store-winmart: #e4002b;
+
+  --radius-card: 16px;
+  --radius-input: 12px;
+  --radius-pill: 999px;
+
+  --font-sans: "Be Vietnam Pro", "Inter", system-ui, sans-serif;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* NFR-22: visible focus ring on all focusable elements. */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
