@@ -74,6 +74,36 @@ lib/
 - `POST /api/v1/ner` → `{ ingredients, exclusions, serving_size, city }`
 - `POST /api/v1/optimize` → ordered stores, per-store products, totals, route reason
 
+## Git workflow
+
+`main` được bảo vệ (ruleset trên GitHub): **không push thẳng** — mọi thay đổi
+phải qua Pull Request, cần **1 approval** và **CI pass** mới merge được. Force-push
+và xóa `main` đều bị cấm.
+
+Quy trình cho member:
+
+```bash
+# 1. Clone & vào nhánh tích hợp dev
+git clone https://github.com/GiapDN-13/gomgom-shopping-optimizer.git
+cd gomgom-shopping-optimizer
+git checkout dev
+
+# 2. Tạo feature branch từ dev cho task của mình
+git checkout -b feat/<sprint>-<mo-ta-ngan>   # vd: feat/sprint2-ner-input
+
+# 3. Code → commit → push
+git add -A
+git commit -m "feat: ..."
+git push -u origin feat/<sprint>-<mo-ta-ngan>
+
+# 4. Mở PR trên GitHub: feature branch -> dev (review + CI)
+# 5. Khi dev ổn định, mở PR: dev -> main (review + CI) để release
+```
+
+- **`main`** — nhánh release, luôn xanh, được bảo vệ.
+- **`dev`** — nhánh tích hợp; feature branch merge vào đây trước.
+- **`feat/*`, `fix/*`** — nhánh làm việc của từng người.
+
 ## Roadmap (spec §6)
 
 Sprint 1 **Project Setup** (this scaffold) → 2 NER → 3 Product Matching →
