@@ -1,17 +1,23 @@
-// Results — FR-16 to FR-22. Built in Sprint 5.
+import { Logo } from "@/components/shared/Logo";
+import { ResultsView } from "@/components/results/ResultsView";
+import { MOCK_QUERY } from "@/lib/shared/mockData";
+
+// Results — Figma screens 2, 3, 4, 5.
 export default async function ResultsPage({
-  params,
+  searchParams,
 }: {
   params: Promise<{ planId: string }>;
+  searchParams: Promise<{ q?: string }>;
 }) {
-  const { planId } = await params;
+  const { q } = await searchParams;
+  const query = q?.trim() || MOCK_QUERY;
+
   return (
-    <main className="mx-auto max-w-5xl px-6 py-16">
-      <h1 className="text-2xl font-semibold">Kết quả kế hoạch</h1>
-      <p className="mt-2 text-[var(--color-text-secondary)]">
-        Plan ID: <code>{planId}</code> — danh sách mua, thẻ cửa hàng, bản đồ và
-        bảng chi phí sẽ có ở Sprint 5.
-      </p>
+    <main className="min-h-screen">
+      <header className="px-8 py-6">
+        <Logo />
+      </header>
+      <ResultsView query={query} />
     </main>
   );
 }
