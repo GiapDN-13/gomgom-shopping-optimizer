@@ -1,14 +1,14 @@
 import { create } from "zustand";
-import type { MockProduct } from "@/lib/shared/mockData";
+import type { CatalogProduct } from "@/lib/shared/catalog";
 
 type Layout = "list" | "grid";
 
 interface ResultsState {
   layout: Layout;
-  selectedProduct: MockProduct | null;
+  selectedProduct: CatalogProduct | null;
   mapExpanded: boolean;
   setLayout: (layout: Layout) => void;
-  selectProduct: (product: MockProduct | null) => void;
+  selectProduct: (product: CatalogProduct | null) => void;
   toggleMap: () => void;
 }
 

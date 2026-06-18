@@ -1,8 +1,7 @@
 import { Logo } from "@/components/shared/Logo";
 import { ResultsView } from "@/components/results/ResultsView";
-import { MOCK_QUERY } from "@/lib/shared/mockData";
 
-// Results — Figma screens 2, 3, 4, 5.
+// Results — Figma screens 2–5 (plan-first).
 export default async function ResultsPage({
   searchParams,
 }: {
@@ -10,14 +9,14 @@ export default async function ResultsPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const { q } = await searchParams;
-  const query = q?.trim() || MOCK_QUERY;
+  const fallbackQuery = q?.trim() || "Tôi muốn nấu bún bò Huế cho 4 người";
 
   return (
     <main className="min-h-screen">
       <header className="px-8 py-6">
         <Logo />
       </header>
-      <ResultsView query={query} />
+      <ResultsView fallbackQuery={fallbackQuery} />
     </main>
   );
 }
