@@ -1,0 +1,105 @@
+// Client service for the NER endpoint + mapping NER output to catalog ingredient keys.
+import type { NerResponse } from "@/lib/shared/types";
+import { RECIPES } from "@/lib/shared/catalog";
+import type { IngredientInput } from "./buildPlan";
+
+export interface NerResult extends NerResponse {
+  raw: NerResponse;
+}
+
+/** Calls POST /api/v1/ner. Throws a human-readable Error on failure (NFR-08/25). */
+export async function callNer(text: string, signal?: AbortSignal): Promise<NerResult> {
+  let res: Response;
+  try {
+    res = await fetch("/api/v1/ner", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+      signal,
+    });
+  } catch {
+    throw new Error("Không thể kết nối máy chủ. Vui lòng kiểm tra mạng và thử lại.");
+  }
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    throw new Error(
+      (data && typeof data.error === "string" && data.error) ||
+        "Dịch vụ phân tích tạm thời gặp sự cố. Vui lòng thử lại.",
+    );
+  }
+
+  const data = (await res.json()) as NerResponse;
+  return { ...data, raw: data };
+}
+
+const VI_KEYWORDS: Array<{ re: RegExp; key: string }> = [
+  { re: /bò/i, key: "beef" },
+  { re: /heo|lợn/i, key: "pork" },
+  { re: /gà/i, key: "chicken" },
+  { re: /bún|phở|mì|miến/i, key: "rice_noodle" },
+  { re: /sả/i, key: "lemongrass" },
+  { re: /mắm|ruốc|nước mắm/i, key: "fish_sauce" },
+  { re: /rau thơm|rau sống|húng|ngò|hành lá/i, key: "fresh_herbs" },
+  { re: /rau|cải|cà chua|cà rốt/i, key: "vegetables" },
+  { re: /đậu hũ|đậu phụ|tàu hũ/i, key: "tofu" },
+];
+
+/** Best-effort: turn a Vietnamese ingredient name into a canonical catalog key. */
+export function ingredientNameToKey(name: string): string | null {
+  for (const { re, key } of VI_KEYWORDS) {
+    if (re.test(name)) return key;
+  }
+  return null;
+}
+
+/**
+ * Convert a NER response into ingredient inputs for buildPlan.
+ * Prefers the dish recipe when recognisable; falls back to keyword mapping of
+ * the extracted ingredient names.
+ */
+export function nerToIngredients(ner: NerResponse): IngredientInput[] {
+  const exclusions = new Set(ner.exclusions.map((e) => e.toLowerCase().trim()));
+  const inputs: IngredientInput[] = [];
+  const seen = new Set<string>();
+
+  for (const ing of ner.ingredients) {
+    if (exclusions.has(ing.name.toLowerCase().trim())) continue;
+    const key = ingredientNameToKey(ing.name) ?? slug(ing.name);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    inputs.push({ key, name: ing.name });
+  }
+  return inputs;
+}
+
+/** Detect a dish from free text and expand to recipe ingredients (display names). */
+export function recipeFromText(text: string): IngredientInput[] | null {
+  const t = text.toLowerCase();
+  if (/bún bò|bun bo/.test(t)) return expand("bun_bo_hue");
+  if (/phở|pho /.test(t)) return expand("pho_bo");
+  if (/cơm gà|com ga/.test(t)) return expand("com_ga");
+  return null;
+}
+
+const KEY_LABELS: Record<string, string> = {
+  beef: "Thịt bò",
+  pork: "Thịt heo",
+  chicken: "Thịt gà",
+  rice_noodle: "Bún/Phở",
+  lemongrass: "Sả",
+  fish_sauce: "Mắm ruốc",
+  fresh_herbs: "Rau thơm",
+  vegetables: "Rau củ",
+  tofu: "Đậu hũ",
+};
+
+function expand(recipeId: string): IngredientInput[] {
+  const recipe = RECIPES[recipeId];
+  if (!recipe) return [];
+  return recipe.ingredients.map((key) => ({ key, name: KEY_LABELS[key] ?? key }));
+}
+
+function slug(s: string): string {
+  return s.toLowerCase().normalize("NFD").replace(/[^a-z0-9]+/g, "_");
+}

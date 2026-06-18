@@ -3,15 +3,16 @@
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { useResultsStore } from "@/hooks/useResultsStore";
-import { formatVnd } from "@/lib/shared/mockData";
+import { formatVnd, STORES } from "@/lib/shared/catalog";
 
 // Product detail card — Figma screen 5. Slides over the results as a dialog.
 export function ProductDetail() {
   const { selectedProduct, selectProduct } = useResultsStore();
+  const store = selectedProduct ? STORES[selectedProduct.storeCode] : null;
 
   return (
     <AnimatePresence>
-      {selectedProduct && (
+      {selectedProduct && store && (
         <motion.div
           className="fixed inset-0 z-50 grid place-items-center bg-black/30 p-4"
           initial={{ opacity: 0 }}
@@ -44,9 +45,25 @@ export function ProductDetail() {
             <div className="grid gap-6 sm:grid-cols-2">
               <dl className="flex flex-col gap-5 text-[var(--color-text-primary)]">
                 <DetailRow label="Tên sản phẩm" value={selectedProduct.name} />
-                <DetailRow label="Nguồn" value={selectedProduct.source} />
+                <div>
+                  <dt className="font-semibold">Nguồn</dt>
+                  <dd className="mt-1 flex items-center gap-2 text-[var(--color-text-secondary)]">
+                    <span
+                      className="inline-block h-2.5 w-2.5 rounded-full"
+                      style={{ backgroundColor: store.color }}
+                      aria-hidden
+                    />
+                    {store.name}
+                  </dd>
+                </div>
                 <DetailRow label="Đơn vị" value={selectedProduct.unit} />
                 <DetailRow label="Giá bán" value={formatVnd(selectedProduct.price)} />
+                <div>
+                  <dt className="font-semibold">Tình trạng</dt>
+                  <dd className="mt-1 text-[var(--color-text-secondary)]">
+                    {selectedProduct.inStock ? "Còn hàng" : "Hết hàng"}
+                  </dd>
+                </div>
                 <div>
                   <dt className="font-semibold">Link sản phẩm</dt>
                   <dd className="mt-1">
@@ -56,7 +73,7 @@ export function ProductDetail() {
                       rel="noopener noreferrer"
                       className="text-[var(--color-primary)] underline"
                     >
-                      Xem tại {selectedProduct.store}
+                      Xem tại {store.name}
                     </a>
                   </dd>
                 </div>
