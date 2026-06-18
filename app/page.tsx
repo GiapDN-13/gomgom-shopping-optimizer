@@ -1,14 +1,16 @@
-import { Logo } from "@/components/shared/Logo";
+import { TopNavBar } from "@/components/shared/TopNavBar";
+import { Footer } from "@/components/shared/Footer";
 import { SearchHero } from "@/components/home/SearchHero";
 
-// Home / Input — Figma screen 1.
+// Home / Input — Stitch "home_smart_suggestions".
 export default function HomePage() {
   return (
-    <main className="min-h-screen">
-      <header className="px-8 py-6">
-        <Logo />
-      </header>
-      <SearchHero />
-    </main>
+    <div className="flex min-h-screen flex-col">
+      <TopNavBar />
+      <main className="flex-1">
+        <SearchHero />
+      </main>
+      <Footer />
+    </div>
   );
 }
