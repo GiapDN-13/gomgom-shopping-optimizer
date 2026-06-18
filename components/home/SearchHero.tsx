@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { GlowBackground } from "@/components/shared/GlowBackground";
 import { LoadingOverlay } from "@/components/shared/LoadingOverlay";
@@ -35,14 +35,13 @@ export function SearchHero() {
   const isLoading = status === "extracting" || status === "matching" || status === "optimizing";
   const suggestion = SUGGESTIONS.find((s) => s.match.test(text));
 
-  useEffect(() => {
-    if (status === "ready") router.push("/parse");
-  }, [status, router]);
-
   async function submit(value: string) {
     const q = value.trim();
     if (!q || isLoading) return;
     await run(q);
+    // Navigate only as a direct result of this submit (not on every "ready" state),
+    // so returning Home later doesn't bounce the user back to /parse.
+    if (usePlanStore.getState().status === "ready") router.push("/parse");
   }
 
   return (
