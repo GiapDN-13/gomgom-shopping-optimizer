@@ -1,20 +1,5 @@
 import type { NextConfig } from "next";
 
-// CSP per NFR-19: no unsafe-inline scripts. Tighten as integrations are added.
-const cspHeader = `
-  default-src 'self';
-  script-src 'self';
-  style-src 'self' 'unsafe-inline';
-  img-src 'self' data: https:;
-  font-src 'self';
-  connect-src 'self' https:;
-  frame-ancestors 'none';
-  base-uri 'self';
-  form-action 'self';
-`
-  .replace(/\s{2,}/g, " ")
-  .trim();
-
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   images: {
@@ -32,7 +17,8 @@ const nextConfig: NextConfig = {
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "X-Frame-Options", value: "DENY" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          { key: "Content-Security-Policy", value: cspHeader },
+          // NOTE: Content-Security-Policy is set per-request in middleware.ts using a
+          // nonce, so Next.js hydration scripts work without 'unsafe-inline' (NFR-19).
         ],
       },
     ];
