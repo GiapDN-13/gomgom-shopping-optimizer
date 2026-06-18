@@ -1,4 +1,8 @@
-// Plan Detail — FR-25. Read-only saved plan with re-run. Built in Sprint 6.
+import { TopNavBar } from "@/components/shared/TopNavBar";
+import { Footer } from "@/components/shared/Footer";
+import { PlanDetailView } from "@/components/history/PlanDetailView";
+
+// Saved plan detail — Stitch "chi_ti_t_k_ho_ch_l_u".
 export default async function PlanDetailPage({
   params,
 }: {
@@ -6,12 +10,12 @@ export default async function PlanDetailPage({
 }) {
   const { planId } = await params;
   return (
-    <main className="mx-auto max-w-5xl px-6 py-16">
-      <h1 className="text-2xl font-semibold">Chi tiết kế hoạch đã lưu</h1>
-      <p className="mt-2 text-[var(--color-text-secondary)]">
-        Plan ID: <code>{planId}</code> — chế độ xem chỉ đọc kèm nút “Chạy lại với
-        giá mới” sẽ có ở Sprint 6.
-      </p>
-    </main>
+    <div className="flex min-h-screen flex-col">
+      <TopNavBar />
+      <main className="flex-1">
+        <PlanDetailView planId={planId} />
+      </main>
+      <Footer />
+    </div>
   );
 }

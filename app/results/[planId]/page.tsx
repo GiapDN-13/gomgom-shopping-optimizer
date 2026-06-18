@@ -1,7 +1,8 @@
-import { Logo } from "@/components/shared/Logo";
+import { TopNavBar } from "@/components/shared/TopNavBar";
+import { Footer } from "@/components/shared/Footer";
 import { ResultsView } from "@/components/results/ResultsView";
 
-// Results — Figma screens 2–5 (plan-first).
+// Results — Stitch "k_t_qu_t_i_u" (plan-first).
 export default async function ResultsPage({
   searchParams,
 }: {
@@ -12,11 +13,12 @@ export default async function ResultsPage({
   const fallbackQuery = q?.trim() || "Tôi muốn nấu bún bò Huế cho 4 người";
 
   return (
-    <main className="min-h-screen">
-      <header className="px-8 py-6">
-        <Logo />
-      </header>
-      <ResultsView fallbackQuery={fallbackQuery} />
-    </main>
+    <div className="flex min-h-screen flex-col">
+      <TopNavBar />
+      <main className="flex-1">
+        <ResultsView fallbackQuery={fallbackQuery} />
+      </main>
+      <Footer />
+    </div>
   );
 }

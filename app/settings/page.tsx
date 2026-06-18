@@ -1,12 +1,16 @@
-// Settings — FR-28 to FR-32, NFR-20. Built in Sprint 6/7.
+import { TopNavBar } from "@/components/shared/TopNavBar";
+import { Footer } from "@/components/shared/Footer";
+import { SettingsView } from "@/components/settings/SettingsView";
+
+// Settings — Stitch "c_i_t".
 export default function SettingsPage() {
   return (
-    <main className="mx-auto max-w-3xl px-6 py-16">
-      <h1 className="text-2xl font-semibold">Cài đặt</h1>
-      <p className="mt-2 text-[var(--color-text-secondary)]">
-        Thành phố mặc định, phương tiện, ngôn ngữ (VI/EN) và tài khoản sẽ có ở
-        Sprint 6/7.
-      </p>
-    </main>
+    <div className="flex min-h-screen flex-col">
+      <TopNavBar />
+      <main className="flex-1">
+        <SettingsView />
+      </main>
+      <Footer />
+    </div>
   );
 }

@@ -1,5 +1,13 @@
 import type { Metadata, Viewport } from "next";
+import { Be_Vietnam_Pro } from "next/font/google";
 import "./globals.css";
+
+// Be Vietnam Pro — core typeface, handles Vietnamese diacritics cleanly (DESIGN.md).
+const beVietnamPro = Be_Vietnam_Pro({
+  subsets: ["latin", "vietnamese"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-be-vietnam-pro",
+});
 
 export const metadata: Metadata = {
   title: "Gomgom — Shopping Optimizer",
@@ -17,7 +25,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   // Vietnamese is the primary UI language (NFR-20).
   return (
-    <html lang="vi">
+    <html lang="vi" className={beVietnamPro.variable}>
       <body>{children}</body>
     </html>
   );
