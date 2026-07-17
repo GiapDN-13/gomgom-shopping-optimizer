@@ -3,18 +3,27 @@ import type { NerResponse } from "@/lib/shared/types";
 import { RECIPES } from "@/lib/shared/catalog";
 import type { IngredientInput } from "./buildPlan";
 
+/** Which extractor to use: self-trained model, or the disclosed external API. */
+export type NerModel = "self" | "api";
+
 export interface NerResult extends NerResponse {
   raw: NerResponse;
+  source?: string; // "self" | "api" | "mock" — provenance label
+  provider?: string; // e.g. gemini-2.0-flash, when source === "api"
 }
 
 /** Calls POST /api/v1/ner. Throws a human-readable Error on failure (NFR-08/25). */
-export async function callNer(text: string, signal?: AbortSignal): Promise<NerResult> {
+export async function callNer(
+  text: string,
+  model?: NerModel,
+  signal?: AbortSignal,
+): Promise<NerResult> {
   let res: Response;
   try {
     res = await fetch("/api/v1/ner", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify(model ? { text, model } : { text }),
       signal,
     });
   } catch {
@@ -29,7 +38,7 @@ export async function callNer(text: string, signal?: AbortSignal): Promise<NerRe
     );
   }
 
-  const data = (await res.json()) as NerResponse;
+  const data = (await res.json()) as NerResult;
   return { ...data, raw: data };
 }
 

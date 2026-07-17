@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { callNer } from "@/lib/services/ner";
+import { callNer, type NerModel } from "@/lib/services/ner";
 import { STORES } from "@/lib/shared/catalog";
 
 interface Stage {
@@ -19,12 +19,15 @@ interface Result {
   entityExtraction: unknown;
   roadMap: unknown;
   error: string | null;
+  source?: string;
+  provider?: string;
 }
 
 // Gomgom Inspector — dark 3-pane debug tool (Stitch "agent_inspector_debug").
 export function InspectorView() {
   const [query, setQuery] = useState("Nấu bún bò cho 4 người ăn cuối tuần. Cần mua đồ tươi.");
   const [running, setRunning] = useState(false);
+  const [model, setModel] = useState<NerModel>("self");
   const [result, setResult] = useState<Result | null>(null);
 
   async function run() {
@@ -33,7 +36,7 @@ export function InspectorView() {
     setRunning(true);
     const start = performance.now();
     try {
-      const ner = await callNer(q);
+      const ner = await callNer(q, model);
       const totalMs = Math.round(performance.now() - start);
       setResult({
         query: q,
@@ -57,6 +60,8 @@ export function InspectorView() {
         },
         roadMap: [{ brand: "bhx", lat: STORES.bhx.lat, lon: STORES.bhx.lon, address: STORES.bhx.address }],
         error: null,
+        source: ner.source,
+        provider: ner.provider,
       });
     } catch (e) {
       const totalMs = Math.round(performance.now() - start);
@@ -95,14 +100,45 @@ export function InspectorView() {
           <span aria-hidden>▦</span>
           <h1 className="font-bold">Gomgom Inspector</h1>
         </div>
-        <button
-          onClick={run}
-          disabled={running}
-          className="rounded-md bg-[var(--color-primary-fixed-dim)] px-4 py-1.5 text-sm font-semibold text-[var(--color-on-primary-fixed)] disabled:opacity-50"
-        >
-          {running ? "Đang chạy…" : "▶ Run Pipeline"}
-        </button>
+        <div className="flex items-center gap-3">
+          {/* provider toggle — clearly labels which extractor is used */}
+          <div role="group" aria-label="Nguồn model" className="flex rounded-md border border-white/15 text-xs">
+            <button
+              onClick={() => setModel("self")}
+              aria-pressed={model === "self"}
+              className={`rounded-l-md px-3 py-1.5 ${model === "self" ? "bg-[var(--color-primary-fixed-dim)] text-[var(--color-on-primary-fixed)] font-semibold" : "text-white/70"}`}
+            >
+              Model tự train
+            </button>
+            <button
+              onClick={() => setModel("api")}
+              aria-pressed={model === "api"}
+              className={`rounded-r-md px-3 py-1.5 ${model === "api" ? "bg-[var(--color-primary-fixed-dim)] text-[var(--color-on-primary-fixed)] font-semibold" : "text-white/70"}`}
+            >
+              API ngoài
+            </button>
+          </div>
+          <button
+            onClick={run}
+            disabled={running}
+            className="rounded-md bg-[var(--color-primary-fixed-dim)] px-4 py-1.5 text-sm font-semibold text-[var(--color-on-primary-fixed)] disabled:opacity-50"
+          >
+            {running ? "Đang chạy…" : "▶ Run Pipeline"}
+          </button>
+        </div>
       </header>
+      {result?.source && (
+        <div className="border-b border-white/10 px-6 py-1.5 text-xs text-white/70">
+          Nguồn kết quả:{" "}
+          <span className="font-semibold text-[var(--color-primary-fixed-dim)]">
+            {result.source === "api"
+              ? `API ngoài (${result.provider ?? "external"})`
+              : result.source === "self"
+                ? "Model tự train (GPT-2)"
+                : "Mock"}
+          </span>
+        </div>
+      )}
 
       <div className="grid gap-4 p-4 lg:grid-cols-[340px_1fr_300px]">
         {/* LEFT — input + context */}
