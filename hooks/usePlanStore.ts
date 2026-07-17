@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { NerResult } from "@/lib/services/ner";
 import { callNer, nerToIngredients, recipeFromText } from "@/lib/services/ner";
-import { buildPlan, type ShoppingPlan } from "@/lib/services/buildPlan";
+import { buildPlan, type ShoppingPlan, type IngredientInput } from "@/lib/services/buildPlan";
 import type { TransportMode } from "@/lib/shared/types";
 
 export type PlanStatus =
@@ -27,6 +27,7 @@ interface PlanState {
   transport: TransportMode;
   servings: number;
   ner: NerResult | null;
+  ingredients: IngredientInput[];
   plan: ShoppingPlan | null;
   status: PlanStatus;
   error: string | null;
@@ -35,6 +36,7 @@ interface PlanState {
   setTransport: (mode: TransportMode) => void;
   setServings: (n: number) => void;
   run: (text: string) => Promise<void>;
+  applyIngredients: (inputs: IngredientInput[]) => void;
   savePlan: () => string | null;
   reset: () => void;
 }
@@ -48,6 +50,7 @@ export const usePlanStore = create<PlanState>((set, get) => ({
   transport: "motorbike",
   servings: 4,
   ner: null,
+  ingredients: [],
   plan: null,
   status: "idle",
   error: null,
@@ -72,13 +75,20 @@ export const usePlanStore = create<PlanState>((set, get) => ({
       await wait(450);
 
       const plan = buildPlan(ingredients);
-      set({ plan, status: "ready", city: ner.city || get().city });
+      // Store the SAME ingredient list the plan was built from, so Parse Preview
+      // shows exactly what will be bought (not the raw model output).
+      set({ ingredients, plan, status: "ready", city: ner.city || get().city });
     } catch (e) {
       set({
         status: "error",
         error: e instanceof Error ? e.message : "Đã xảy ra lỗi không xác định.",
       });
     }
+  },
+
+  applyIngredients: (inputs: IngredientInput[]) => {
+    // Rebuild the plan from a (possibly edited) ingredient list — Parse Preview edits.
+    set({ ingredients: inputs, plan: buildPlan(inputs), status: "ready" });
   },
 
   savePlan: () => {

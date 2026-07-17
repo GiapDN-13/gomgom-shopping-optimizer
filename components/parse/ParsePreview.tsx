@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/shared/Button";
 import { Badge } from "@/components/shared/Badge";
 import { usePlanStore } from "@/hooks/usePlanStore";
-import type { NerResult } from "@/lib/services/ner";
+import { ingredientNameToKey } from "@/lib/services/ner";
+import type { IngredientInput } from "@/lib/services/buildPlan";
 
 interface Row {
   id: number;
+  key: string;
   name: string;
   qty: string;
   unit: string;
@@ -24,14 +26,29 @@ const CATEGORY_DOT: Record<string, string> = {
   khác: "#BCAAA4",
 };
 
-function seedRows(ner: NerResult | null): Row[] {
-  if (!ner) return [];
-  return ner.ingredients.map((ing, i) => ({
+// Coarse category from an ingredient key, for the colored dot.
+const KEY_CATEGORY: Record<string, string> = {
+  beef: "thịt",
+  pork: "thịt",
+  chicken: "thịt",
+  rice_noodle: "tinh bột",
+  lemongrass: "gia vị",
+  fish_sauce: "gia vị",
+  fresh_herbs: "rau",
+  vegetables: "rau",
+  tofu: "khác",
+};
+
+// Seed rows from the SAME ingredient list the plan was built from (store.ingredients),
+// so Parse Preview matches Results — not the raw model output.
+function seedRows(ingredients: IngredientInput[]): Row[] {
+  return ingredients.map((ing, i) => ({
     id: i,
+    key: ing.key,
     name: ing.name,
-    qty: ing.quantity ? String(ing.quantity) : "1",
-    unit: ing.unit ?? "phần",
-    category: ing.category ?? "khác",
+    qty: "1",
+    unit: "phần",
+    category: KEY_CATEGORY[ing.key] ?? "khác",
     included: true,
   }));
 }
@@ -40,10 +57,10 @@ function seedRows(ner: NerResult | null): Row[] {
 // (Stitch "parse_preview"; FR-04, FR-06, FR-08).
 export function ParsePreview() {
   const router = useRouter();
-  const { ner, query, servings, setServings } = usePlanStore();
+  const { ner, ingredients, query, servings, setServings, applyIngredients } = usePlanStore();
 
-  // Seed once from the NER result captured by the store (lazy initializers — no effect).
-  const [rows, setRows] = useState<Row[]>(() => seedRows(ner));
+  // Seed once from the plan's ingredient list (lazy initializers — no effect).
+  const [rows, setRows] = useState<Row[]>(() => seedRows(ingredients));
   const [exclusions, setExclusions] = useState<string[]>(() => ner?.exclusions ?? []);
 
   const dishTitle = query || "Danh sách mua";
@@ -58,12 +75,19 @@ export function ParsePreview() {
   function addRow() {
     setRows((rs) => [
       ...rs,
-      { id: Date.now(), name: "", qty: "1", unit: "phần", category: "khác", included: true },
+      { id: Date.now(), key: "", name: "", qty: "1", unit: "phần", category: "khác", included: true },
     ]);
   }
 
   function confirm() {
-    // The plan is already computed in the store; go straight to results.
+    // Rebuild the plan from the (edited) list so changes actually take effect.
+    const inputs: IngredientInput[] = rows
+      .filter((r) => r.included && r.name.trim())
+      .map((r) => ({
+        key: r.key || ingredientNameToKey(r.name) || r.name.toLowerCase().trim(),
+        name: r.name.trim(),
+      }));
+    applyIngredients(inputs);
     router.push("/results/demo");
   }
 
