@@ -55,7 +55,7 @@ export function StoreRouteCard({ store, order }: { store: PlanStore; order: numb
 
       <div className="mt-3 flex flex-col gap-1 border-t border-[var(--color-border)] pt-3 text-sm">
         <Row label="Tạm tính" value={formatVnd(store.productSubtotal)} />
-        <Row label="Phí giao" value={formatVnd(store.deliveryFee)} muted />
+        <Row label="Phí giao (ước tính)" value={formatVnd(store.deliveryFee)} muted />
       </div>
     </div>
   );

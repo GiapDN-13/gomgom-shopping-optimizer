@@ -103,9 +103,11 @@ const NAME_BLOCKLIST = ["hat giong", "gia vi", "huong lieu", "combo"];
  * different thing ("bánh tráng mắm ruốc" is a snack, not a jar of mắm ruốc).
  */
 const KEY_BLOCKLIST: Record<string, string[]> = {
-  fish_sauce: ["banh trang", "snack", "banh"],
+  // "xot ga chien nuoc mam" (cooking sauce packets) contain the nuoc mam
+  // keyword but aren't fish sauce — block sauce/marinade derivatives.
+  fish_sauce: ["banh trang", "snack", "banh", "xot", "sot", "chien", "uop"],
   rice_noodle: ["snack", "mi tron"],
-  shrimp_paste: ["banh trang", "snack"],
+  shrimp_paste: ["banh trang", "snack", "xot", "sot", "chien"],
   // Raw-meat ingredients: processed products contain the meat keyword but
   // aren't what a recipe means by "thịt ..." (sausages, jerky, snacks).
   pork: ["xuc xich", "snack", "kho bo", "kho heo", "banh", "heo ham", "pate", "chao ", "an lien"],

@@ -11,7 +11,8 @@ export function CostBreakdownPanel({ plan }: { plan: ShoppingPlan }) {
 
       <div className="flex flex-col gap-2 text-sm">
         <Row label="Tiền hàng" value={formatVnd(plan.productTotal)} />
-        <Row label="Phí giao" value={formatVnd(plan.deliveryTotal)} />
+        {/* per-chain demo estimates from STORES — not live retailer fees */}
+        <Row label="Phí giao (ước tính)" value={formatVnd(plan.deliveryTotal)} />
         <Row label="Số cửa hàng" value={`${plan.storeCount} cửa hàng`} />
         <div className="my-1 border-t border-[var(--color-border)]" />
         <Row label="Tổng cộng" value={formatVnd(plan.finalTotal)} strong />
