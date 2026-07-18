@@ -82,12 +82,38 @@ export function nerToIngredients(ner: NerResponse): IngredientInput[] {
   return inputs;
 }
 
+/** Diacritic-insensitive lowering so "bún riêu", "bun rieu", "Bún Rêu" all match. */
+function normalizeViText(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/đ/g, "d")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "");
+}
+
+// Ordered: more specific dishes first (e.g. "bún bò" before generic "phở").
+const DISH_PATTERNS: Array<{ re: RegExp; recipe: string }> = [
+  { re: /bun bo/, recipe: "bun_bo_hue" },
+  { re: /bun rieu|bun reu/, recipe: "bun_rieu" },
+  { re: /bun cha/, recipe: "bun_cha" },
+  { re: /bun thit nuong/, recipe: "bun_thit_nuong" },
+  { re: /pho ga/, recipe: "pho_ga" },
+  { re: /\bpho\b(?! mai)/, recipe: "pho_bo" }, // not "phô mai" (cheese)
+  { re: /com ga/, recipe: "com_ga" },
+  { re: /lau thai/, recipe: "lau_thai" },
+  { re: /lau bo/, recipe: "lau_bo" },
+  { re: /\blau\b/, recipe: "lau_thai" },
+  { re: /canh chua/, recipe: "canh_chua" },
+  { re: /thit kho/, recipe: "thit_kho" },
+  { re: /mi quang/, recipe: "mi_quang" },
+];
+
 /** Detect a dish from free text and expand to recipe ingredients (display names). */
 export function recipeFromText(text: string): IngredientInput[] | null {
-  const t = text.toLowerCase();
-  if (/bún bò|bun bo/.test(t)) return expand("bun_bo_hue");
-  if (/phở|pho /.test(t)) return expand("pho_bo");
-  if (/cơm gà|com ga/.test(t)) return expand("com_ga");
+  const t = normalizeViText(text);
+  for (const { re, recipe } of DISH_PATTERNS) {
+    if (re.test(t)) return expand(recipe);
+  }
   return null;
 }
 
@@ -101,6 +127,15 @@ const KEY_LABELS: Record<string, string> = {
   fresh_herbs: "Rau thơm",
   vegetables: "Rau củ",
   tofu: "Đậu hũ",
+  crab: "Cua đồng",
+  tomato: "Cà chua",
+  shrimp_paste: "Mắm tôm",
+  peanuts: "Đậu phộng",
+  shrimp: "Tôm tươi",
+  squid: "Mực",
+  mushroom: "Nấm",
+  fish: "Cá",
+  egg: "Trứng",
 };
 
 function expand(recipeId: string): IngredientInput[] {
