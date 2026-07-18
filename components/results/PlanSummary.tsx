@@ -5,6 +5,7 @@ import { formatVnd } from "@/lib/shared/catalog";
 import type { ShoppingPlan } from "@/lib/services/buildPlan";
 import { useRouteSummary } from "@/hooks/useRouteSummary";
 import { fmtDuration, fmtKm } from "@/lib/services/route";
+import { substitutionNotices } from "@/lib/services/substitution";
 
 // Plan summary header card — title + "Kế hoạch tốt nhất" + total + reason + 4 stats (Stitch Results).
 export function PlanSummary({ title, plan }: { title: string; plan: ShoppingPlan }) {
@@ -38,6 +39,17 @@ export function PlanSummary({ title, plan }: { title: string; plan: ShoppingPlan
         <span className="font-semibold">Lý do chọn: </span>
         {plan.reason}
       </div>
+
+      {/* honest substitutions: the user named a variety we couldn't match */}
+      {substitutionNotices(title, plan).map((note) => (
+        <div
+          key={note}
+          role="alert"
+          className="mt-2 rounded-[var(--radius-input)] border border-[#9c4500]/30 bg-[#ff7a1b]/10 p-3 text-sm text-[#9c4500]"
+        >
+          ⚠ {note}
+        </div>
+      ))}
 
       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {stats.map((s) => (
