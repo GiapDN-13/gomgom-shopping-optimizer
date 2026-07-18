@@ -6,7 +6,16 @@ import { formatVnd } from "@/lib/shared/catalog";
 import type { PlanStore } from "@/lib/services/buildPlan";
 
 // One store stop in visit order (StoreRouteCard) — store-grouped, plan-first.
-export function StoreRouteCard({ store, order }: { store: PlanStore; order: number }) {
+export function StoreRouteCard({
+  store,
+  order,
+  substitutedIds,
+}: {
+  store: PlanStore;
+  order: number;
+  /** product ids standing in for a variety the user named (near-match swaps) */
+  substitutedIds?: Set<string>;
+}) {
   const { layout, selectProduct } = useResultsStore();
   const stale = store.lastUpdatedHoursAgo > 48;
 
@@ -44,12 +53,18 @@ export function StoreRouteCard({ store, order }: { store: PlanStore; order: numb
         }
       >
         {store.items.map((item) => (
-          <ProductCard
-            key={item.product.id}
-            product={item.product}
-            layout={layout}
-            onClick={() => selectProduct(item.product)}
-          />
+          <div key={item.product.id} className="relative">
+            {substitutedIds?.has(item.product.id) && (
+              <span className="absolute right-2 top-2 z-10 rounded-[var(--radius-pill)] bg-[#ff7a1b]/90 px-2 py-0.5 text-xs font-semibold text-white shadow-sm">
+                ≈ Thay thế gần đúng
+              </span>
+            )}
+            <ProductCard
+              product={item.product}
+              layout={layout}
+              onClick={() => selectProduct(item.product)}
+            />
+          </div>
         ))}
       </div>
 

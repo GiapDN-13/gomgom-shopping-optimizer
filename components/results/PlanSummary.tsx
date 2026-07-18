@@ -5,7 +5,7 @@ import { formatVnd } from "@/lib/shared/catalog";
 import type { ShoppingPlan } from "@/lib/services/buildPlan";
 import { useRouteSummary } from "@/hooks/useRouteSummary";
 import { fmtDuration, fmtKm } from "@/lib/services/route";
-import { substitutionNotices } from "@/lib/services/substitution";
+import { findSubstitutions, substitutionNotices } from "@/lib/services/substitution";
 
 // Plan summary header card — title + "Kế hoạch tốt nhất" + total + reason + 4 stats (Stitch Results).
 export function PlanSummary({ title, plan }: { title: string; plan: ShoppingPlan }) {
@@ -13,11 +13,19 @@ export function PlanSummary({ title, plan }: { title: string; plan: ShoppingPlan
   const summary = useRouteSummary((s) => s.summary);
   const approx = summary?.estimated ? "≈" : "";
 
+  // Near-match substitutions must show up in the chip too — "0 món thiếu"
+  // next to a swapped fish reads as a silent lie.
+  const subs = findSubstitutions(title, plan);
+  const coverage =
+    subs.length > 0
+      ? { icon: "⚠️", label: `${plan.unmatched.length} thiếu · ${subs.length} thay thế` }
+      : { icon: "✅", label: `${plan.unmatched.length} món thiếu` };
+
   const stats = [
     { icon: "🏪", label: `${plan.storeCount} cửa hàng` },
     { icon: "🧭", label: summary ? `${approx}${fmtKm(summary.distanceM)}` : "— km" },
     { icon: "⏱️", label: summary ? `~${fmtDuration(summary.durationS)}` : "— phút" },
-    { icon: "✅", label: `${plan.unmatched.length} món thiếu` },
+    coverage,
   ];
 
   return (

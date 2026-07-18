@@ -2,7 +2,7 @@
 // ("cá dọn bể" -> "cá"), and product matching then picks any fish. If the user
 // named a variety we couldn't actually match, SAY SO instead of silently
 // reporting "0 món thiếu" with a different fish.
-import type { ShoppingPlan } from "./buildPlan";
+import type { PlanItem, ShoppingPlan } from "./buildPlan";
 
 const PROTEIN_TOKENS = [
   "cá", "gà", "bò", "heo", "tôm", "mực", "cua", "ốc", "lươn", "vịt",
@@ -49,16 +49,25 @@ export function varietyPhrases(query: string): Array<{ protein: string; variety:
   return out;
 }
 
+export interface Substitution {
+  /** what the user actually asked for, e.g. "cá dọn bể" */
+  variety: string;
+  /** the plan item standing in for it */
+  item: PlanItem;
+}
+
 /**
- * One notice per variety the user asked for that no matched product reflects,
- * naming the substitute actually planned. Empty when everything matches.
+ * Varieties the user asked for that no matched product reflects, with the
+ * substitute item actually planned. Empty when everything matches. Drives the
+ * summary notice, the stat chip AND the per-product badge — one source, so
+ * the UI never contradicts itself ("0 món thiếu" next to a swapped fish).
  */
-export function substitutionNotices(query: string, plan: ShoppingPlan): string[] {
+export function findSubstitutions(query: string, plan: ShoppingPlan): Substitution[] {
   const phrases = varietyPhrases(query);
   if (phrases.length === 0) return [];
 
   const items = plan.stores.flatMap((s) => s.items);
-  const notices: string[] = [];
+  const out: Substitution[] = [];
   for (const { protein, variety } of phrases) {
     const varietyNorm = stripDiacritics(variety);
     const proteinNorm = stripDiacritics(protein);
@@ -71,10 +80,16 @@ export function substitutionNotices(query: string, plan: ShoppingPlan): string[]
     if (related.length === 0) continue; // protein itself unmatched -> already in "món thiếu"
     const exact = related.some((it) => stripDiacritics(it.product.name).includes(varietyNorm));
     if (!exact) {
-      notices.push(
-        `Không tìm thấy đúng "${variety}" trong dữ liệu sản phẩm — kế hoạch dùng "${related[0].product.name}" thay thế.`,
-      );
+      out.push({ variety, item: related[0] });
     }
   }
-  return notices;
+  return out;
+}
+
+/** Human-readable notice per substitution (for the summary card). */
+export function substitutionNotices(query: string, plan: ShoppingPlan): string[] {
+  return findSubstitutions(query, plan).map(
+    ({ variety, item }) =>
+      `Không tìm thấy đúng "${variety}" trong dữ liệu sản phẩm — kế hoạch dùng "${item.product.name}" thay thế.`,
+  );
 }
