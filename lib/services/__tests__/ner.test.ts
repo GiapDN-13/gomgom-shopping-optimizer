@@ -29,6 +29,26 @@ describe("recipeFromText", () => {
   it("returns null for unknown dishes", () => {
     expect(recipeFromText("mua nước ngọt")).toBeNull();
   });
+
+  it("recognises bún riêu (with typo + no diacritics)", () => {
+    for (const q of ["nấu bún riêu cua cho 4 người", "Bún rêu", "bun rieu"]) {
+      const ings = recipeFromText(q);
+      expect(ings).not.toBeNull();
+      expect(ings!.map((i) => i.key)).toContain("crab");
+      expect(ings!.map((i) => i.key)).toContain("tomato");
+    }
+  });
+
+  it("recognises the newly added dishes", () => {
+    expect(recipeFromText("lẩu thái cho 6 người")!.map((i) => i.key)).toContain("shrimp");
+    expect(recipeFromText("canh chua cá lóc")!.map((i) => i.key)).toContain("fish");
+    expect(recipeFromText("thịt kho trứng")!.map((i) => i.key)).toContain("egg");
+    expect(recipeFromText("mì quảng")!.map((i) => i.key)).toContain("peanuts");
+  });
+
+  it("does not mistake phô mai (cheese) for phở", () => {
+    expect(recipeFromText("mua phô mai con bò cười")).toBeNull();
+  });
 });
 
 describe("nerToIngredients", () => {

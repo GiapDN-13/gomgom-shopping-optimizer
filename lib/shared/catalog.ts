@@ -145,18 +145,57 @@ function mk(
 }
 
 // Recipe book: dish keyword -> ingredient keys (mirrors NER objective_id flow).
+// The self-trained model was taught shopping-intent -> product suggestions,
+// NOT dish -> ingredients (it answers "nấu X" with kitchen tools) — so common
+// Vietnamese dishes are decomposed deterministically here instead.
 export const RECIPES: Record<string, { title: string; ingredients: string[] }> = {
   bun_bo_hue: {
     title: "Bún bò Huế",
     ingredients: ["beef", "rice_noodle", "lemongrass", "fish_sauce", "fresh_herbs"],
   },
+  bun_rieu: {
+    title: "Bún riêu cua",
+    ingredients: ["crab", "rice_noodle", "tomato", "tofu", "shrimp_paste", "fresh_herbs"],
+  },
+  bun_cha: {
+    title: "Bún chả",
+    ingredients: ["pork", "rice_noodle", "fresh_herbs", "fish_sauce"],
+  },
+  bun_thit_nuong: {
+    title: "Bún thịt nướng",
+    ingredients: ["pork", "rice_noodle", "fresh_herbs", "peanuts"],
+  },
   pho_bo: {
     title: "Phở bò",
     ingredients: ["beef", "rice_noodle", "fresh_herbs"],
   },
+  pho_ga: {
+    title: "Phở gà",
+    ingredients: ["chicken", "rice_noodle", "fresh_herbs"],
+  },
   com_ga: {
     title: "Cơm gà",
     ingredients: ["chicken", "vegetables"],
+  },
+  lau_thai: {
+    title: "Lẩu Thái",
+    ingredients: ["shrimp", "squid", "mushroom", "vegetables", "rice_noodle"],
+  },
+  lau_bo: {
+    title: "Lẩu bò",
+    ingredients: ["beef", "mushroom", "vegetables", "tofu", "rice_noodle"],
+  },
+  canh_chua: {
+    title: "Canh chua cá",
+    ingredients: ["fish", "tomato", "vegetables", "fresh_herbs"],
+  },
+  thit_kho: {
+    title: "Thịt kho trứng",
+    ingredients: ["pork", "egg"],
+  },
+  mi_quang: {
+    title: "Mì Quảng",
+    ingredients: ["pork", "shrimp", "rice_noodle", "fresh_herbs", "peanuts"],
   },
 };
 

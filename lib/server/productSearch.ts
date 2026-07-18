@@ -37,7 +37,7 @@ export function normalizeVi(s: string): string {
  */
 export const KEYWORDS: Record<string, string[]> = {
   beef: ["thit bo", "bo uc", "nam bo"],
-  pork: ["thit heo", "ba chi", "heo xay"],
+  pork: ["thit heo", "ba chi", "heo xay", "suon heo"],
   chicken: ["thit ga", "dui ga", "uc ga", "ga ta"],
   rice_noodle: ["bun tuoi", "banh pho", "bun kho", "pho kho", "bun"],
   lemongrass: ["sa cay", "sa bam", "cu sa"],
@@ -45,6 +45,16 @@ export const KEYWORDS: Record<string, string[]> = {
   fresh_herbs: ["rau thom", "hanh la", "ngo gai", "hung que"],
   vegetables: ["rau cai", "ca chua", "cai xanh", "rau muong"],
   tofu: ["dau hu", "dau phu", "tau hu"],
+  crab: ["cua dong", "rieu cua", "cua xay", "gach cua"],
+  tomato: ["ca chua"],
+  shrimp_paste: ["mam tom"],
+  peanuts: ["dau phong", "lac rang"],
+  shrimp: ["tom tuoi", "tom su", "tom the", "tom dong lanh"],
+  squid: ["muc ong", "muc tuoi", "muc la"],
+  // "nam" alone substring-matches too much ("nam" = male) — specific types only.
+  mushroom: ["nam kim cham", "nam rom", "nam huong", "nam bao ngu", "nam dui ga"],
+  fish: ["ca dieu hong", "ca basa", "ca loc", "ca thu", "phi le ca"],
+  egg: ["trung ga", "trung vit", "trung cut"],
 };
 
 export function keywordsFor(ing: IngredientInput): string[] {
@@ -79,6 +89,17 @@ export function matchesWholeWords(nameNormalized: string | null, kw: string): bo
   if (!nameNormalized) return false;
   const escaped = kw.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   return new RegExp(`(?:^|[^a-z0-9])${escaped}(?:$|[^a-z0-9])`).test(nameNormalized);
+}
+
+/**
+ * Cheapest-first ordering surfaces things you can't cook with: seed packets
+ * ("hạt giống cà chua" beats actual tomatoes on price), seasoning sachets, etc.
+ */
+const NAME_BLOCKLIST = ["hat giong", "gia vi nem", "huong lieu"];
+
+export function isBlockedName(nameNormalized: string | null): boolean {
+  if (!nameNormalized) return false;
+  return NAME_BLOCKLIST.some((b) => nameNormalized.includes(b));
 }
 
 /** next/image only accepts https remotes per our config; drop anything else. */
@@ -128,8 +149,18 @@ export async function searchProducts(
     if (error) {
       throw new Error(`Supabase query lỗi: ${error.message}`);
     }
-    const products = (data as DbRow[])
-      .filter((r) => matchesWholeWords(r.name_normalized, kw))
+    const rows = (data as DbRow[]).filter(
+      (r) => matchesWholeWords(r.name_normalized, kw) && !isBlockedName(r.name_normalized),
+    );
+    // Relevance before price: a name STARTING with the keyword ("ca chua beef")
+    // is the item itself; a mid-name hit ("dau sot ca chua") is a derivative.
+    rows.sort((a, b) => {
+      const aStarts = a.name_normalized?.startsWith(kw) ? 0 : 1;
+      const bStarts = b.name_normalized?.startsWith(kw) ? 0 : 1;
+      if (aStarts !== bStarts) return aStarts - bStarts;
+      return (a.price ?? 0) - (b.price ?? 0);
+    });
+    const products = rows
       .map((r) => rowToProduct(r, ing.key))
       .filter((p): p is CatalogProduct => p !== null)
       .slice(0, limit);
