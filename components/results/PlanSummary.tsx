@@ -3,17 +3,19 @@
 import { Badge } from "@/components/shared/Badge";
 import { formatVnd } from "@/lib/shared/catalog";
 import type { ShoppingPlan } from "@/lib/services/buildPlan";
+import { useRouteSummary } from "@/hooks/useRouteSummary";
+import { fmtDuration, fmtKm } from "@/lib/services/route";
 
 // Plan summary header card — title + "Kế hoạch tốt nhất" + total + reason + 4 stats (Stitch Results).
 export function PlanSummary({ title, plan }: { title: string; plan: ShoppingPlan }) {
-  // Derive simple route metrics (real distances arrive with the Sprint 4 optimizer).
-  const km = (plan.storeCount * 1.6 + 1.6).toFixed(1).replace(".", ",");
-  const minutes = plan.storeCount * 6 + 6;
+  // Real route metrics published by MapPanel (OSRM); "—" until computed.
+  const summary = useRouteSummary((s) => s.summary);
+  const approx = summary?.estimated ? "≈" : "";
 
   const stats = [
     { icon: "🏪", label: `${plan.storeCount} cửa hàng` },
-    { icon: "🧭", label: `${km} km` },
-    { icon: "⏱️", label: `~${minutes} phút` },
+    { icon: "🧭", label: summary ? `${approx}${fmtKm(summary.distanceM)}` : "— km" },
+    { icon: "⏱️", label: summary ? `~${fmtDuration(summary.durationS)}` : "— phút" },
     { icon: "✅", label: `${plan.unmatched.length} món thiếu` },
   ];
 
