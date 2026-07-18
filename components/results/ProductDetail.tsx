@@ -67,25 +67,37 @@ export function ProductDetail() {
                 <div>
                   <dt className="font-semibold">Link sản phẩm</dt>
                   <dd className="mt-1">
-                    <a
-                      href={selectedProduct.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[var(--color-primary)] underline"
-                    >
-                      Xem tại {store.name}
-                    </a>
+                    {selectedProduct.url ? (
+                      <a
+                        href={selectedProduct.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[var(--color-primary)] underline"
+                      >
+                        Xem tại {store.name}
+                      </a>
+                    ) : (
+                      <span className="text-[var(--color-on-surface-variant)]">
+                        Chưa có link
+                      </span>
+                    )}
                   </dd>
                 </div>
               </dl>
               <div className="relative aspect-square w-full overflow-hidden rounded-[var(--radius-card)] bg-[var(--color-border)]">
-                <Image
-                  src={selectedProduct.image}
-                  alt={selectedProduct.name}
-                  fill
-                  sizes="(max-width: 768px) 90vw, 320px"
-                  className="object-cover"
-                />
+                {selectedProduct.image ? (
+                  <Image
+                    src={selectedProduct.image}
+                    alt={selectedProduct.name}
+                    fill
+                    sizes="(max-width: 768px) 90vw, 320px"
+                    className="object-cover"
+                  />
+                ) : (
+                  <span className="grid h-full w-full place-items-center text-5xl" aria-hidden>
+                    🛒
+                  </span>
+                )}
               </div>
             </div>
           </motion.div>

@@ -30,13 +30,19 @@ export function ProductCard({ product, layout, onClick }: ProductCardProps) {
           isGrid ? "aspect-square w-full" : "h-20 w-20 shrink-0"
         }`}
       >
-        <Image
-          src={product.image}
-          alt={product.name}
-          fill
-          sizes="(max-width: 768px) 33vw, 160px"
-          className="object-cover"
-        />
+        {product.image ? (
+          <Image
+            src={product.image}
+            alt={product.name}
+            fill
+            sizes="(max-width: 768px) 33vw, 160px"
+            className="object-cover"
+          />
+        ) : (
+          <span className="grid h-full w-full place-items-center text-xl" aria-hidden>
+            🛒
+          </span>
+        )}
       </div>
       <div className={`flex flex-1 flex-col ${isGrid ? "" : "gap-1"}`}>
         <span className="text-base font-semibold text-[var(--color-text-primary)]">

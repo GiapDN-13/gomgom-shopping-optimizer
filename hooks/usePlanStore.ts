@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { NerResult } from "@/lib/services/ner";
 import { callNer, nerToIngredients, recipeFromText } from "@/lib/services/ner";
 import { buildPlan, type ShoppingPlan, type IngredientInput } from "@/lib/services/buildPlan";
+import { callOptimize } from "@/lib/services/optimize";
 import type { TransportMode } from "@/lib/shared/types";
 
 export type PlanStatus =
@@ -36,7 +37,7 @@ interface PlanState {
   setTransport: (mode: TransportMode) => void;
   setServings: (n: number) => void;
   run: (text: string) => Promise<void>;
-  applyIngredients: (inputs: IngredientInput[]) => void;
+  applyIngredients: (inputs: IngredientInput[]) => Promise<void>;
   savePlan: () => string | null;
   reset: () => void;
 }
@@ -72,9 +73,9 @@ export const usePlanStore = create<PlanState>((set, get) => ({
 
       const ingredients = recipeFromText(query) ?? nerToIngredients(ner);
       set({ status: "optimizing" });
-      await wait(450);
 
-      const plan = buildPlan(ingredients);
+      // Real Supabase products via /api/v1/optimize; mock catalog as fallback.
+      const plan = (await callOptimize(ingredients)) ?? buildPlan(ingredients);
       // Store the SAME ingredient list the plan was built from, so Parse Preview
       // shows exactly what will be bought (not the raw model output).
       set({ ingredients, plan, status: "ready", city: ner.city || get().city });
@@ -86,9 +87,11 @@ export const usePlanStore = create<PlanState>((set, get) => ({
     }
   },
 
-  applyIngredients: (inputs: IngredientInput[]) => {
+  applyIngredients: async (inputs: IngredientInput[]) => {
     // Rebuild the plan from a (possibly edited) ingredient list — Parse Preview edits.
-    set({ ingredients: inputs, plan: buildPlan(inputs), status: "ready" });
+    set({ ingredients: inputs, status: "optimizing" });
+    const plan = (await callOptimize(inputs)) ?? buildPlan(inputs);
+    set({ plan, status: "ready" });
   },
 
   savePlan: () => {
