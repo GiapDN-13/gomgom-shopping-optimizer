@@ -3,18 +3,29 @@
 import { Badge } from "@/components/shared/Badge";
 import { formatVnd } from "@/lib/shared/catalog";
 import type { ShoppingPlan } from "@/lib/services/buildPlan";
+import { useRouteSummary } from "@/hooks/useRouteSummary";
+import { fmtDuration, fmtKm } from "@/lib/services/route";
+import { findSubstitutions, substitutionNotices } from "@/lib/services/substitution";
 
 // Plan summary header card — title + "Kế hoạch tốt nhất" + total + reason + 4 stats (Stitch Results).
 export function PlanSummary({ title, plan }: { title: string; plan: ShoppingPlan }) {
-  // Derive simple route metrics (real distances arrive with the Sprint 4 optimizer).
-  const km = (plan.storeCount * 1.6 + 1.6).toFixed(1).replace(".", ",");
-  const minutes = plan.storeCount * 6 + 6;
+  // Real route metrics published by MapPanel (OSRM); "—" until computed.
+  const summary = useRouteSummary((s) => s.summary);
+  const approx = summary?.estimated ? "≈" : "";
+
+  // Near-match substitutions must show up in the chip too — "0 món thiếu"
+  // next to a swapped fish reads as a silent lie.
+  const subs = findSubstitutions(title, plan);
+  const coverage =
+    subs.length > 0
+      ? { icon: "⚠️", label: `${plan.unmatched.length} thiếu · ${subs.length} thay thế` }
+      : { icon: "✅", label: `${plan.unmatched.length} món thiếu` };
 
   const stats = [
     { icon: "🏪", label: `${plan.storeCount} cửa hàng` },
-    { icon: "🧭", label: `${km} km` },
-    { icon: "⏱️", label: `~${minutes} phút` },
-    { icon: "✅", label: `${plan.unmatched.length} món thiếu` },
+    { icon: "🧭", label: summary ? `${approx}${fmtKm(summary.distanceM)}` : "— km" },
+    { icon: "⏱️", label: summary ? `~${fmtDuration(summary.durationS)}` : "— phút" },
+    coverage,
   ];
 
   return (
@@ -36,6 +47,17 @@ export function PlanSummary({ title, plan }: { title: string; plan: ShoppingPlan
         <span className="font-semibold">Lý do chọn: </span>
         {plan.reason}
       </div>
+
+      {/* honest substitutions: the user named a variety we couldn't match */}
+      {substitutionNotices(title, plan).map((note) => (
+        <div
+          key={note}
+          role="alert"
+          className="mt-2 rounded-[var(--radius-input)] border border-[#9c4500]/30 bg-[#ff7a1b]/10 p-3 text-sm text-[#9c4500]"
+        >
+          ⚠ {note}
+        </div>
+      ))}
 
       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {stats.map((s) => (

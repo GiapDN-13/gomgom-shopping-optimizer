@@ -27,6 +27,8 @@ interface PlanState {
   city: string;
   transport: TransportMode;
   servings: number;
+  /** User's starting point (map picker / geolocation) — drives distance-aware optimization. */
+  location: { lat: number; lon: number } | null;
   ner: NerResult | null;
   ingredients: IngredientInput[];
   plan: ShoppingPlan | null;
@@ -36,8 +38,11 @@ interface PlanState {
   setCity: (city: string) => void;
   setTransport: (mode: TransportMode) => void;
   setServings: (n: number) => void;
+  setLocation: (loc: { lat: number; lon: number }) => void;
   run: (text: string) => Promise<void>;
   applyIngredients: (inputs: IngredientInput[]) => Promise<void>;
+  /** Re-run store selection with the current location/transport (no NER). */
+  reoptimize: () => Promise<void>;
   savePlan: () => string | null;
   reset: () => void;
 }
@@ -45,11 +50,23 @@ interface PlanState {
 // small delay so the 3-step loading overlay is visible (demo UX)
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+/**
+ * Servings from the query itself ("cho 12 người") — deterministic, works even
+ * when the model misses the constraint (training data capped servings at 8).
+ */
+export function servingsFromQuery(query: string): number | null {
+  const m = query.match(/cho\s+(\d{1,2})\s*(?:người|nguoi|ng)\b/i);
+  if (!m) return null;
+  const n = parseInt(m[1], 10);
+  return n >= 1 && n <= 50 ? n : null;
+}
+
 export const usePlanStore = create<PlanState>((set, get) => ({
   query: "",
   city: "Đà Nẵng",
   transport: "motorbike",
   servings: 4,
+  location: null,
   ner: null,
   ingredients: [],
   plan: null,
@@ -60,6 +77,7 @@ export const usePlanStore = create<PlanState>((set, get) => ({
   setCity: (city) => set({ city }),
   setTransport: (transport) => set({ transport }),
   setServings: (servings) => set({ servings: Math.max(1, servings) }),
+  setLocation: (location) => set({ location }),
 
   run: async (text: string) => {
     const query = text.trim();
@@ -68,14 +86,25 @@ export const usePlanStore = create<PlanState>((set, get) => ({
 
     try {
       const ner = await callNer(query);
-      set({ ner, status: "matching" });
+      // Servings: explicit "cho N người" in the query wins; else the model's
+      // extraction (>=2 — the adapter defaults to 1 when absent); else keep.
+      const fromQuery = servingsFromQuery(query);
+      const servings = fromQuery ?? (ner.serving_size >= 2 ? ner.serving_size : get().servings);
+      set({ ner, servings, status: "matching" });
       await wait(450);
 
-      const ingredients = recipeFromText(query) ?? nerToIngredients(ner);
+      // MODEL FIRST: the retrained NER knows dish->ingredients (and the gate +
+      // API fallback already vetted its output server-side). The hardcoded
+      // recipe book is only a fallback when the model returns nothing usable
+      // (e.g. "lẩu cá" must not be overridden by the lẩu Thái recipe).
+      const fromModel = nerToIngredients(ner);
+      const ingredients = fromModel.length > 0 ? fromModel : (recipeFromText(query) ?? []);
       set({ status: "optimizing" });
 
       // Real Supabase products via /api/v1/optimize; mock catalog as fallback.
-      const plan = (await callOptimize(ingredients)) ?? buildPlan(ingredients);
+      const { location, transport } = get();
+      const plan =
+        (await callOptimize(ingredients, { location, transport })) ?? buildPlan(ingredients);
       // Store the SAME ingredient list the plan was built from, so Parse Preview
       // shows exactly what will be bought (not the raw model output).
       set({ ingredients, plan, status: "ready", city: ner.city || get().city });
@@ -90,7 +119,17 @@ export const usePlanStore = create<PlanState>((set, get) => ({
   applyIngredients: async (inputs: IngredientInput[]) => {
     // Rebuild the plan from a (possibly edited) ingredient list — Parse Preview edits.
     set({ ingredients: inputs, status: "optimizing" });
-    const plan = (await callOptimize(inputs)) ?? buildPlan(inputs);
+    const { location, transport } = get();
+    const plan = (await callOptimize(inputs, { location, transport })) ?? buildPlan(inputs);
+    set({ plan, status: "ready" });
+  },
+
+  reoptimize: async () => {
+    // Same ingredients, new location/transport — e.g. the user moved the map's
+    // starting point. Keeps the current plan visible while recomputing.
+    const { ingredients, location, transport } = get();
+    if (ingredients.length === 0) return;
+    const plan = (await callOptimize(ingredients, { location, transport })) ?? buildPlan(ingredients);
     set({ plan, status: "ready" });
   },
 

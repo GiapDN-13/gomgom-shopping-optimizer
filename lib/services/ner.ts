@@ -10,6 +10,11 @@ export interface NerResult extends NerResponse {
   raw: NerResponse;
   source?: string; // "self" | "api" | "mock" — provenance label
   provider?: string; // e.g. gemini-2.0-flash, when source === "api"
+  // Verification-gate fields forwarded from the Python NER service (disclosed
+  // architecture): final backend + gate verdict for honest provenance labels.
+  _backend?: string; // "hybrid" | "ckey-api" | ...
+  _gate?: { score: number; verdict: "pass" | "fail"; reasons: string[] };
+  _latency_ms?: { model?: number; api?: number };
 }
 
 /** Calls POST /api/v1/ner. Throws a human-readable Error on failure (NFR-08/25). */
@@ -42,15 +47,30 @@ export async function callNer(
   return { ...data, raw: data };
 }
 
+// Order matters: more specific first ("mắm tôm" before the generic "mắm").
+// NOTE: JS \b is ASCII-only — it does NOT work next to Vietnamese diacritics
+// ("cá" never matches /\bcá\b/). Plain substring is safe here because tones
+// distinguish words ("cá" ≠ "cà chua", "cải").
 const VI_KEYWORDS: Array<{ re: RegExp; key: string }> = [
+  { re: /mắm tôm/i, key: "shrimp_paste" },
+  { re: /mắm cá|mắm nêm|mắm ruốc|nước mắm/i, key: "fish_sauce" },
+  { re: /diếp cá/i, key: "fresh_herbs" }, // herb, not fish
+  { re: /cua/i, key: "crab" },
+  { re: /tôm/i, key: "shrimp" },
+  { re: /mực/i, key: "squid" },
+  { re: /cá/i, key: "fish" },
+  { re: /trứng/i, key: "egg" },
+  { re: /nấm/i, key: "mushroom" },
+  { re: /đậu phộng|lạc rang/i, key: "peanuts" },
   { re: /bò/i, key: "beef" },
-  { re: /heo|lợn/i, key: "pork" },
+  { re: /heo|lợn|ba chỉ|sườn/i, key: "pork" },
   { re: /gà/i, key: "chicken" },
   { re: /bún|phở|mì|miến/i, key: "rice_noodle" },
   { re: /sả/i, key: "lemongrass" },
   { re: /mắm|ruốc|nước mắm/i, key: "fish_sauce" },
-  { re: /rau thơm|rau sống|húng|ngò|hành lá/i, key: "fresh_herbs" },
-  { re: /rau|cải|cà chua|cà rốt/i, key: "vegetables" },
+  { re: /rau thơm|rau sống|húng|ngò|hành lá|thì là|rau cần|rau răm|tía tô|rau đắng/i, key: "fresh_herbs" },
+  { re: /cà chua/i, key: "tomato" },
+  { re: /rau|cải|cà rốt|giá đỗ|bắp chuối/i, key: "vegetables" },
   { re: /đậu hũ|đậu phụ|tàu hũ/i, key: "tofu" },
 ];
 

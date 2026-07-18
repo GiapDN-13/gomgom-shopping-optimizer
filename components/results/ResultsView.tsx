@@ -13,6 +13,7 @@ import { CostBreakdownPanel } from "./CostBreakdownPanel";
 import { ProductDetail } from "./ProductDetail";
 import { useResultsStore } from "@/hooks/useResultsStore";
 import { usePlanStore } from "@/hooks/usePlanStore";
+import { findSubstitutions } from "@/lib/services/substitution";
 
 export function ResultsView({ fallbackQuery }: { fallbackQuery: string }) {
   const router = useRouter();
@@ -57,9 +58,19 @@ export function ResultsView({ fallbackQuery }: { fallbackQuery: string }) {
               {/* LEFT */}
               <div className="flex flex-col gap-5">
                 <PlanSummary title={displayQuery} plan={plan} />
-                {plan.stores.map((store, i) => (
-                  <StoreRouteCard key={store.code} store={store} order={i + 1} />
-                ))}
+                {(() => {
+                  const substitutedIds = new Set(
+                    findSubstitutions(displayQuery, plan).map((s) => s.item.product.id),
+                  );
+                  return plan.stores.map((store, i) => (
+                    <StoreRouteCard
+                      key={store.code}
+                      store={store}
+                      order={i + 1}
+                      substitutedIds={substitutedIds}
+                    />
+                  ));
+                })()}
                 <AlternativePlans plan={plan} />
               </div>
 

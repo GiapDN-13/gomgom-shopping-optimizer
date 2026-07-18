@@ -39,6 +39,38 @@ const KEY_CATEGORY: Record<string, string> = {
   tofu: "khác",
 };
 
+// Honest provenance label: which extractor produced this parse (FR-03/NFR-35).
+// "ckey-api" means the verification gate failed the model output and the
+// disclosed API fallback answered instead.
+function SourceBadge({ ner }: { ner: ReturnType<typeof usePlanStore.getState>["ner"] }) {
+  if (!ner?.source && !ner?._backend) return null;
+  const isCkey = ner._backend === "ckey-api";
+  const isApi = isCkey || ner.source === "api";
+  const label = isCkey
+    ? "API ngoài (Ckey)"
+    : ner.source === "api"
+      ? `API ngoài (${ner.provider ?? "external"})`
+      : ner.source === "mock"
+        ? "Mock"
+        : "Model tự train";
+  const verdict = ner._gate?.verdict;
+  return (
+    <span
+      className={`flex items-center gap-1 rounded-[var(--radius-pill)] px-3 py-1 text-xs font-semibold ${
+        isApi
+          ? "bg-[#ff7a1b]/15 text-[#9c4500]"
+          : "bg-[var(--color-primary-container)]/20 text-[var(--color-primary)]"
+      }`}
+      title={ner._gate?.reasons?.join("; ") || undefined}
+    >
+      {label}
+      {verdict && (
+        <span aria-label={`gate ${verdict}`}>{verdict === "pass" ? "✓" : "⚠"}</span>
+      )}
+    </span>
+  );
+}
+
 // Seed rows from the SAME ingredient list the plan was built from (store.ingredients),
 // so Parse Preview matches Results — not the raw model output.
 function seedRows(ingredients: IngredientInput[]): Row[] {
@@ -107,6 +139,7 @@ export function ParsePreview() {
           <h2 className="text-xl font-semibold">Kiểm tra danh sách</h2>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <Badge tone="neutral">{dishTitle}</Badge>
+            <SourceBadge ner={ner} />
             <div className="flex items-center gap-2 rounded-[var(--radius-input)] bg-[var(--color-surface-high)] p-1">
               <button
                 onClick={() => setServings(servings - 1)}

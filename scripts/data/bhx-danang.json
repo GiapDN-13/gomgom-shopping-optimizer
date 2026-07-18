@@ -1,0 +1,331 @@
+{
+ "source": "bhx",
+ "prefix": "bhx-web",
+ "_note": "BHX Đà Nẵng (gồm Quảng Nam cũ sau sáp nhập) — trích từ bachhoaxanh.com/he-thong-cua-hang qua browser, geocode Nominatim 2026-07-18. 54/91 địa chỉ geocode được.",
+ "branches": [
+  {
+   "store_name": "BHX 198 Nguyễn Phước Nguyên",
+   "address": "198 Nguyễn Phước Nguyên, Tổ 34, Phường An Khê, Thành phố Đà Nẵng",
+   "lat": 16.0596995,
+   "lon": 108.1800812
+  },
+  {
+   "store_name": "BHX 28 Lê Thanh Nghị",
+   "address": "28 Lê Thanh Nghị, Phường Hòa Cường, Thành phố Đà Nẵng",
+   "lat": 16.0417181,
+   "lon": 108.2157049
+  },
+  {
+   "store_name": "BHX 78 – 80 Nguyễn Duy Hiệu",
+   "address": "78 – 80 Nguyễn Duy Hiệu, Phường An Hải, Thành phố Đà Nẵng",
+   "lat": 16.0558269,
+   "lon": 108.2394739
+  },
+  {
+   "store_name": "BHX 840 - 842 Phan Châu Trinh",
+   "address": "840 - 842 Phan Châu Trinh, Phường Hương Trà, Thành phố Đà Nẵng",
+   "lat": 15.5608936,
+   "lon": 108.5006184
+  },
+  {
+   "store_name": "BHX đường Lý Thường Kiệt",
+   "address": "đường Lý Thường Kiệt, khối Xuân Thuận, Phường Hội An, Thành phố Đà Nẵng",
+   "lat": 16.0802928,
+   "lon": 108.221377
+  },
+  {
+   "store_name": "BHX 51 Trần Nhân Tông",
+   "address": "51 Trần Nhân Tông, Phường Điện Bàn, Thành phố Đà Nẵng",
+   "lat": 15.8972557,
+   "lon": 108.2448668
+  },
+  {
+   "store_name": "BHX 589-591 Hùng Vương",
+   "address": "589-591 Hùng Vương, khối phố Mỹ Hòa, Xã Nam Phước, Thành phố Đà Nẵng",
+   "lat": 15.8791351,
+   "lon": 108.3213395
+  },
+  {
+   "store_name": "BHX 1047 - 1049 Hùng Vương",
+   "address": "1047 - 1049 Hùng Vương, thôn Trà Châu, Xã Hiệp Đức, Thành phố Đà Nẵng",
+   "lat": 15.8791351,
+   "lon": 108.3213395
+  },
+  {
+   "store_name": "BHX 278 Tiểu La",
+   "address": "278 Tiểu La, khu phố 2, Xã Thăng Bình, Thành phố Đà Nẵng",
+   "lat": 15.7348032,
+   "lon": 108.3489546
+  },
+  {
+   "store_name": "BHX Đường Trần Duy Chiến",
+   "address": "Đường Trần Duy Chiến, Phường Sơn Trà, Thành phố Đà Nẵng",
+   "lat": 16.084924,
+   "lon": 108.24246
+  },
+  {
+   "store_name": "BHX Xã Hòa Tiến",
+   "address": "Xã Hòa Tiến, Thành phố Đà Nẵng",
+   "lat": 15.9603292,
+   "lon": 108.1326104
+  },
+  {
+   "store_name": "BHX 600 Núi Thành",
+   "address": "600 Núi Thành, Phường Hòa Cường, Thành phố Đà Nẵng",
+   "lat": 16.0304819,
+   "lon": 108.222576
+  },
+  {
+   "store_name": "BHX 979 Trần Hưng Đạo",
+   "address": "979 Trần Hưng Đạo, Khối phố Viêm Trung, Phường Điện Bàn Đông, Thành phố Đà Nẵng",
+   "lat": 16.0607904,
+   "lon": 108.2303821
+  },
+  {
+   "store_name": "BHX 5 Nguyễn Văn Trỗi",
+   "address": "5 Nguyễn Văn Trỗi, Phường Bàn Thạch, Thành phố Đà Nẵng",
+   "lat": 15.6136923,
+   "lon": 108.4743178
+  },
+  {
+   "store_name": "BHX 37-39 Nguyễn Tất Thành",
+   "address": "37-39 Nguyễn Tất Thành, Xã Đại Lộc, Thành phố Đà Nẵng",
+   "lat": 16.1104518,
+   "lon": 108.132495
+  },
+  {
+   "store_name": "BHX đường Kỳ Hà",
+   "address": "đường Kỳ Hà, thôn An Hải Đông, Xã Núi Thành, Thành phố Đà Nẵng",
+   "lat": 16.0837387,
+   "lon": 108.245446
+  },
+  {
+   "store_name": "BHX 396A Tôn Đản",
+   "address": "396A Tôn Đản, Phường An Khê, Thành phố Đà Nẵng",
+   "lat": 16.0425306,
+   "lon": 108.1842623
+  },
+  {
+   "store_name": "BHX 35-37 Hùng Vương",
+   "address": "35-37 Hùng Vương, khối phố Long Xuyên 1, Xã Nam Phước, Thành phố Đà Nẵng",
+   "lat": 15.8791351,
+   "lon": 108.3213395
+  },
+  {
+   "store_name": "BHX Đường Văn Tiến Dũng",
+   "address": "Đường Văn Tiến Dũng, Khu E1 - Nam Cầu Cẩm Lệ, Phường Hòa Xuân, Thành phố Đà Nẵng",
+   "lat": 16.0012511,
+   "lon": 108.2130816
+  },
+  {
+   "store_name": "BHX 153 Âu Cơ",
+   "address": "153 Âu Cơ, Phường Liên Chiểu, Thành phố Đà Nẵng",
+   "lat": 16.0674343,
+   "lon": 108.1428208
+  },
+  {
+   "store_name": "BHX 41 Huỳnh Ngọc Huệ",
+   "address": "41 Huỳnh Ngọc Huệ, Phường Thanh Khê, Thành phố Đà Nẵng",
+   "lat": 16.0621298,
+   "lon": 108.1847201
+  },
+  {
+   "store_name": "BHX số 107 đường Tô Hiệu",
+   "address": "số 107 đường Tô Hiệu, Phường Hòa Khánh, Thành phố Đà Nẵng",
+   "lat": 16.0584913,
+   "lon": 108.1683622
+  },
+  {
+   "store_name": "BHX 112 - 114 Nguyễn Phan Vinh",
+   "address": "112 - 114 Nguyễn Phan Vinh, Phường Sơn Trà, Thành phố Đà Nẵng",
+   "lat": 16.1011846,
+   "lon": 108.2511627
+  },
+  {
+   "store_name": "BHX đường Lạc Long Quân",
+   "address": "đường Lạc Long Quân, khối phố Hà Quảng Đông, Phường Điện Bàn Đông, Thành phố Đà Nẵng",
+   "lat": 16.0739765,
+   "lon": 108.1443491
+  },
+  {
+   "store_name": "BHX 17 Bà Huyện Thanh Quan",
+   "address": "17 Bà Huyện Thanh Quan, Phường Ngũ Hành Sơn, Thành phố Đà Nẵng",
+   "lat": 16.0450811,
+   "lon": 108.2479162
+  },
+  {
+   "store_name": "BHX Đường Nguyễn Thị Định",
+   "address": "Đường Nguyễn Thị Định, Phường An Hải, Thành phố Đà Nẵng",
+   "lat": 16.0823129,
+   "lon": 108.2322044
+  },
+  {
+   "store_name": "BHX 77 Nguyễn Văn Linh",
+   "address": "77 Nguyễn Văn Linh, Khối 2, Xã Núi Thành, Thành phố Đà Nẵng",
+   "lat": 15.4399395,
+   "lon": 107.7954571
+  },
+  {
+   "store_name": "BHX đường Trần Phú",
+   "address": "đường Trần Phú, khu dân cư đường vào cụm CN Trảng Nhật, Phường An Thắng, Thành phố Đà Nẵng",
+   "lat": 16.0744612,
+   "lon": 108.2236517
+  },
+  {
+   "store_name": "BHX 97-99 Phan Châu Trinh",
+   "address": "97-99 Phan Châu Trinh, Tổ dân phố Lãnh Thượng 1, Xã Quế Sơn, Thành phố Đà Nẵng",
+   "lat": 15.8784778,
+   "lon": 108.3272742
+  },
+  {
+   "store_name": "BHX 77 Lê Trọng Tấn",
+   "address": "77 Lê Trọng Tấn, Phường An Khê, Thành phố Đà Nẵng",
+   "lat": 16.0335112,
+   "lon": 108.180523
+  },
+  {
+   "store_name": "BHX 25-27 Mai Đăng Chơn",
+   "address": "25-27 Mai Đăng Chơn, Phường Ngũ Hành Sơn, Thành phố Đà Nẵng",
+   "lat": 15.9939449,
+   "lon": 108.2543139
+  },
+  {
+   "store_name": "BHX 707 Trần Cao Vân",
+   "address": "707 Trần Cao Vân, Phường Thanh Khê, Thành phố Đà Nẵng",
+   "lat": 16.0711993,
+   "lon": 108.194207
+  },
+  {
+   "store_name": "BHX 288 - 290 Phan Châu Trinh",
+   "address": "288 - 290 Phan Châu Trinh, Phường Tam Kỳ, Thành phố Đà Nẵng",
+   "lat": 15.5689196,
+   "lon": 108.488826
+  },
+  {
+   "store_name": "BHX 97 Phạm Như Xương",
+   "address": "97 Phạm Như Xương, Phường Hòa Khánh, Thành phố Đà Nẵng",
+   "lat": 16.0643614,
+   "lon": 108.1488101
+  },
+  {
+   "store_name": "BHX 45-47 Châu Thị Vĩnh Tế",
+   "address": "45-47 Châu Thị Vĩnh Tế, Phường Ngũ Hành Sơn, Thành phố Đà Nẵng",
+   "lat": 16.0521853,
+   "lon": 108.2399506
+  },
+  {
+   "store_name": "BHX 322 Lê Quảng Chí",
+   "address": "322 Lê Quảng Chí, Phường Hòa Xuân, Thành phố Đà Nẵng",
+   "lat": 16.0160211,
+   "lon": 108.2236902
+  },
+  {
+   "store_name": "BHX 34 Phan Châu Trinh",
+   "address": "34 Phan Châu Trinh, Tổ Trung Thị, Xã Trà My, Thành phố Đà Nẵng",
+   "lat": 15.8784778,
+   "lon": 108.3272742
+  },
+  {
+   "store_name": "BHX Lô số 35 - 36 Khu F1",
+   "address": "Lô số 35 - 36 Khu F1, Khu tái định cư Nại Hiên Đông, Phường Sơn Trà, Thành phố Đà Nẵng",
+   "lat": 16.068501,
+   "lon": 108.2240242
+  },
+  {
+   "store_name": "BHX 76 Bùi Tá Hán",
+   "address": "76 Bùi Tá Hán, Phường Ngũ Hành Sơn, Thành phố Đà Nẵng",
+   "lat": 16.0296288,
+   "lon": 108.2418249
+  },
+  {
+   "store_name": "BHX 346 - 346A Hoàng Diệu",
+   "address": "346 - 346A Hoàng Diệu, Phường Hòa Cường, Thành phố Đà Nẵng",
+   "lat": 16.0549108,
+   "lon": 108.2162756
+  },
+  {
+   "store_name": "BHX Thôn Giáng Nam 2",
+   "address": "Thôn Giáng Nam 2, Phường Hòa Xuân, Thành phố Đà Nẵng",
+   "lat": 15.952255,
+   "lon": 108.2192931
+  },
+  {
+   "store_name": "BHX 244-246 Kinh Dương Vương",
+   "address": "244-246 Kinh Dương Vương, Phường Thanh Khê, Thành phố Đà Nẵng",
+   "lat": 16.0740029,
+   "lon": 108.1706658
+  },
+  {
+   "store_name": "BHX Lô 01 và Lô 02",
+   "address": "Lô 01 và Lô 02, Khu B2 - 1 đường Nguyễn Thị Minh Khai, Phường Hải Châu, Thành phố Đà Nẵng",
+   "lat": 16.068501,
+   "lon": 108.2240242
+  },
+  {
+   "store_name": "BHX 50 Phạm Văn Nghị",
+   "address": "50 Phạm Văn Nghị, Phường Thanh Khê, Thành phố Đà Nẵng",
+   "lat": 16.0574286,
+   "lon": 108.2098463
+  },
+  {
+   "store_name": "BHX 44 Lê Lợi",
+   "address": "44 Lê Lợi, Phường Tam Kỳ, Thành phố Đà Nẵng",
+   "lat": 15.5662879,
+   "lon": 108.474367
+  },
+  {
+   "store_name": "BHX 37 - 39 Đỗ Đăng Tuyển",
+   "address": "37 - 39 Đỗ Đăng Tuyển, Khu Nghĩa Hiệp, Xã Đại Lộc, Thành phố Đà Nẵng",
+   "lat": 15.8823727,
+   "lon": 108.3491432
+  },
+  {
+   "store_name": "BHX Phường Điện Bàn Đông",
+   "address": "Phường Điện Bàn Đông, Thành phố Đà Nẵng",
+   "lat": 15.9316216,
+   "lon": 108.2703109
+  },
+  {
+   "store_name": "BHX 08 Đường Thái Thị Bôi",
+   "address": "08 Đường Thái Thị Bôi, Phường Thanh Khê, Thành phố Đà Nẵng",
+   "lat": 16.0683504,
+   "lon": 108.1967703
+  },
+  {
+   "store_name": "BHX Đường Nguyễn Hoàng",
+   "address": "Đường Nguyễn Hoàng, Phường Thanh Khê, Thành phố Đà Nẵng",
+   "lat": 16.0601219,
+   "lon": 108.213559
+  },
+  {
+   "store_name": "BHX Đường Nguyễn Huy Tưởng",
+   "address": "Đường Nguyễn Huy Tưởng, Tổ 109, Phường Hòa Khánh, Thành phố Đà Nẵng",
+   "lat": 16.0524717,
+   "lon": 108.1696977
+  },
+  {
+   "store_name": "BHX thôn 6",
+   "address": "thôn 6, Xã Xuân Phú, Thành phố Đà Nẵng",
+   "lat": 15.2412826,
+   "lon": 107.864807
+  },
+  {
+   "store_name": "BHX 128 Đồng Kè",
+   "address": "128 Đồng Kè, Phường Liên Chiểu, Thành phố Đà Nẵng",
+   "lat": 16.0732346,
+   "lon": 108.1456979
+  },
+  {
+   "store_name": "BHX Lô 39-40 khu B2-28",
+   "address": "Lô 39-40 khu B2-28, khu đô thị Phước Lý, Phường Hòa Khánh, Thành phố Đà Nẵng",
+   "lat": 16.045561,
+   "lon": 108.1676964
+  },
+  {
+   "store_name": "BHX Số 97 Trịnh Đình Thảo",
+   "address": "Số 97 Trịnh Đình Thảo, phường Cẩm Lệ , thành phố Đà Nẵng",
+   "lat": 16.0259254,
+   "lon": 108.2120353
+  }
+ ]
+}
