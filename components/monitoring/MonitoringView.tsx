@@ -13,21 +13,50 @@ interface LatencyMs {
   api?: number | null;
 }
 
+interface GateCheck {
+  name: string;
+  status: "pass" | "fail" | "warn" | "skip";
+}
+
+interface NerOutput {
+  query_type?: string;
+  objective_id?: string;
+  candidate?: string[];
+  excluded?: string[];
+}
+
 interface LogEntry {
   ts: number;
   query: string;
   gate_score: number | null;
   verdict: string;
   reasons: string[];
+  gate_checks?: GateCheck[];
   source: string;
   latency_ms?: LatencyMs;
-  output?: {
-    query_type?: string;
-    objective_id?: string;
-    candidate?: string[];
-    excluded?: string[];
-  } | null;
+  output?: NerOutput | null;
+  /** model answer that the gate rejected — present only when Ckey replaced it */
+  model_output?: NerOutput | null;
 }
+
+// Dev-facing labels + weights for each gate check (mirrors app/gate.py).
+const CHECK_LABELS: Record<string, { label: string; kind: "hard" | "soft" }> = {
+  schema: { label: "Schema JSON hợp lệ", kind: "hard" },
+  labels: { label: "query_type/objective trong tập đóng", kind: "hard" },
+  consistency: { label: "Objective ↔ candidate nhất quán", kind: "hard" },
+  cooking_sanity: { label: "Câu nấu ăn không trả dụng cụ bếp", kind: "hard" },
+  protein_echo: { label: "Protein trong câu có trong nguyên liệu", kind: "hard" },
+  echo: { label: "Search: sản phẩm xuất hiện trong query", kind: "hard" },
+  thin_list: { label: "Danh sách nguyên liệu đủ dày (>2)", kind: "soft" },
+  confidence: { label: "PhoBERT confidence ≥ 0.55", kind: "soft" },
+};
+
+const CHECK_ICON: Record<GateCheck["status"], string> = {
+  pass: "✓",
+  fail: "✗",
+  warn: "⚠",
+  skip: "—",
+};
 
 interface Stats {
   total: number;
@@ -167,10 +196,50 @@ export function MonitoringView() {
             />
           </div>
 
+          {/* scoring methodology — devs should not have to trust a bare number */}
+          <details className="mt-4 rounded-[var(--radius-card)] border border-[var(--color-outline-variant)]/50 bg-[var(--color-surface-lowest)] p-4 shadow-[var(--shadow-soft)]">
+            <summary className="cursor-pointer text-sm font-semibold text-[var(--color-primary)]">
+              📐 Cách tính gate score &amp; khi nào Ckey API trả thay
+            </summary>
+            <div className="mt-3 space-y-2 text-sm">
+              <p className="font-mono text-xs">
+                score = 1 − 0.40 × (số hard check vi phạm) − 0.15 × (số soft signal) · verdict = fail nếu ≥1 hard
+              </p>
+              <div className="grid gap-x-6 gap-y-1 sm:grid-cols-2">
+                {Object.entries(CHECK_LABELS).map(([k, v]) => (
+                  <p key={k} className="text-xs">
+                    <span
+                      className={`mr-1 rounded-[var(--radius-pill)] px-1.5 py-0.5 font-semibold ${
+                        v.kind === "hard"
+                          ? "bg-[var(--color-error-container)]/40 text-[var(--color-error)]"
+                          : "bg-[#ff7a1b]/15 text-[#9c4500]"
+                      }`}
+                    >
+                      {v.kind === "hard" ? "hard −0.40" : "soft −0.15"}
+                    </span>
+                    {v.label}
+                  </p>
+                ))}
+              </div>
+              <p className="text-xs text-[var(--color-on-surface-variant)]">
+                Luồng: model trả lời → gate chấm. <b>pass</b> → dùng model (nguồn &quot;Model&quot;).{" "}
+                <b>fail</b> + có CKEY_API_KEY → gọi Ckey, parse hợp lệ thì dùng và ghi nguồn{" "}
+                <b>&quot;API&quot;</b> (kèm output model bị loại để so sánh); Ckey lỗi/thiếu key →
+                vẫn dùng model, lý do ghi trong log. Check &quot;—&quot; = không áp dụng cho loại câu đó.
+              </p>
+            </div>
+          </details>
+
           {/* charts */}
           <div className="mt-4 grid gap-4 lg:grid-cols-3">
             <Panel title="Nguồn trả lời (Model vs API)">
               <Donut model={modelCount} api={apiCount} />
+              {apiCount === 0 && (
+                <p className="mt-2 text-xs text-[var(--color-on-surface-variant)]">
+                  Ckey API = 0 vì chưa có request nào bị gate đánh fail — model tự trả 100%.
+                  (Số này là thật, không phải lỗi hiển thị.)
+                </p>
+              )}
             </Panel>
             <Panel title="Gate score theo request (50 gần nhất)">
               <Sparkline points={stats.points} />
@@ -275,6 +344,29 @@ function Row({
       {expanded && (
         <tr className="border-b border-[var(--color-outline-variant)]/30">
           <td colSpan={6} className="py-2">
+            {/* per-check breakdown so devs can verify the score, not trust it */}
+            {entry.gate_checks && entry.gate_checks.length > 0 && (
+              <div className="mb-2 grid gap-x-6 gap-y-0.5 sm:grid-cols-2">
+                {entry.gate_checks.map((c) => (
+                  <p key={c.name} className="text-xs">
+                    <span
+                      className={`mr-1.5 inline-block w-4 text-center font-bold ${
+                        c.status === "pass"
+                          ? "text-[var(--color-primary)]"
+                          : c.status === "fail"
+                            ? "text-[var(--color-error)]"
+                            : c.status === "warn"
+                              ? "text-[#9c4500]"
+                              : "text-[var(--color-on-surface-variant)]"
+                      }`}
+                    >
+                      {CHECK_ICON[c.status] ?? "?"}
+                    </span>
+                    {CHECK_LABELS[c.name]?.label ?? c.name}
+                  </p>
+                ))}
+              </div>
+            )}
             {entry.reasons.length > 0 && (
               <ul className="mb-2 list-inside list-disc text-[var(--color-on-surface-variant)]">
                 {entry.reasons.map((r) => (
@@ -282,9 +374,22 @@ function Row({
                 ))}
               </ul>
             )}
+            <p className="mb-1 text-xs font-semibold text-[var(--color-on-surface-variant)]">
+              {isApi ? "Kết quả CUỐI (Ckey API trả):" : "Kết quả (model tự train):"}
+            </p>
             <pre className="overflow-x-auto rounded-[var(--radius-input)] bg-[var(--color-surface-high)] p-2 font-mono text-[11px] text-[var(--color-on-surface)]">
               {JSON.stringify(entry.output ?? {}, null, 2)}
             </pre>
+            {entry.model_output && (
+              <>
+                <p className="mb-1 mt-2 text-xs font-semibold text-[#9c4500]">
+                  Output model bị gate loại (để so sánh):
+                </p>
+                <pre className="overflow-x-auto rounded-[var(--radius-input)] border border-[#ff7a1b]/30 bg-[#ff7a1b]/5 p-2 font-mono text-[11px] text-[var(--color-on-surface)]">
+                  {JSON.stringify(entry.model_output, null, 2)}
+                </pre>
+              </>
+            )}
           </td>
         </tr>
       )}
