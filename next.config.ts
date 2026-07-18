@@ -3,9 +3,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   images: {
-    remotePatterns: [
-      { protocol: "https", hostname: "images.unsplash.com" },
-    ],
+    // Real product thumbnails come from many retailer CDNs (BHX, GO!, MM,
+    // Lotte, WinMart...) — allow any https host.
+    remotePatterns: [{ protocol: "https", hostname: "**" }],
   },
   async headers() {
     return [

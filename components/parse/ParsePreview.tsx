@@ -87,7 +87,8 @@ export function ParsePreview() {
         key: r.key || ingredientNameToKey(r.name) || r.name.toLowerCase().trim(),
         name: r.name.trim(),
       }));
-    applyIngredients(inputs);
+    // Fire-and-forget: Results shows its loading state until the plan is ready.
+    void applyIngredients(inputs);
     router.push("/results/demo");
   }
 

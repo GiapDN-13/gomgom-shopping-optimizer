@@ -1,5 +1,9 @@
-// Build a plan-first shopping plan from NER ingredients (Sprint 2 heuristic).
+// Build a plan-first shopping plan from NER ingredients.
 // Real ACO route optimization lands in Sprint 4; here we group cheapest matches by store.
+//
+// Two data paths share assemblePlan():
+//  - buildPlan(): client-side fallback over the mock CATALOG (no network).
+//  - /api/v1/optimize: server-side over real Supabase products, with real freshness.
 import { CATALOG, STORES, type CatalogProduct } from "@/lib/shared/catalog";
 import type { StoreCode } from "@/lib/shared/types";
 
@@ -37,28 +41,23 @@ export interface IngredientInput {
 }
 
 /**
- * Greedy matcher: for each ingredient pick the cheapest in-stock product,
- * then group by store and total up including delivery fees.
+ * Pure assembly: group matched items by store, total up (products + delivery),
+ * flag stale sources. `freshness` overrides the static per-store data age with
+ * real hours (from source_freshness) when provided.
  */
-export function buildPlan(ingredients: IngredientInput[]): ShoppingPlan {
-  const matchedByStore = new Map<StoreCode, PlanItem[]>();
-  const unmatched: string[] = [];
-
-  for (const ing of ingredients) {
-    const candidates = CATALOG.filter(
-      (p) => p.ingredientKey === ing.key && p.inStock,
-    );
-    if (candidates.length === 0) {
-      unmatched.push(ing.name);
-      continue;
-    }
-    const best = candidates.reduce((a, b) => (b.price < a.price ? b : a));
-    const list = matchedByStore.get(best.storeCode) ?? [];
-    list.push({ ingredientKey: ing.key, requestedName: ing.name, product: best });
-    matchedByStore.set(best.storeCode, list);
+export function assemblePlan(
+  matched: PlanItem[],
+  unmatched: string[],
+  freshness?: Partial<Record<StoreCode, number>>,
+): ShoppingPlan {
+  const byStore = new Map<StoreCode, PlanItem[]>();
+  for (const item of matched) {
+    const list = byStore.get(item.product.storeCode) ?? [];
+    list.push(item);
+    byStore.set(item.product.storeCode, list);
   }
 
-  const stores: PlanStore[] = [...matchedByStore.entries()].map(([code, items]) => {
+  const stores: PlanStore[] = [...byStore.entries()].map(([code, items]) => {
     const meta = STORES[code];
     const productSubtotal = items.reduce((s, it) => s + it.product.price, 0);
     return {
@@ -69,7 +68,7 @@ export function buildPlan(ingredients: IngredientInput[]): ShoppingPlan {
       items,
       productSubtotal,
       deliveryFee: meta.deliveryFee,
-      lastUpdatedHoursAgo: meta.lastUpdatedHoursAgo,
+      lastUpdatedHoursAgo: freshness?.[code] ?? meta.lastUpdatedHoursAgo,
     };
   });
 
@@ -92,6 +91,29 @@ export function buildPlan(ingredients: IngredientInput[]): ShoppingPlan {
     staleStores,
     reason: buildReason(stores, unmatched),
   };
+}
+
+/**
+ * Client-side fallback: greedy match over the mock CATALOG (cheapest in-stock
+ * product per ingredient). Used when the optimize API is unreachable.
+ */
+export function buildPlan(ingredients: IngredientInput[]): ShoppingPlan {
+  const matched: PlanItem[] = [];
+  const unmatched: string[] = [];
+
+  for (const ing of ingredients) {
+    const candidates = CATALOG.filter(
+      (p) => p.ingredientKey === ing.key && p.inStock,
+    );
+    if (candidates.length === 0) {
+      unmatched.push(ing.name);
+      continue;
+    }
+    const best = candidates.reduce((a, b) => (b.price < a.price ? b : a));
+    matched.push({ ingredientKey: ing.key, requestedName: ing.name, product: best });
+  }
+
+  return assemblePlan(matched, unmatched);
 }
 
 function buildReason(stores: PlanStore[], unmatched: string[]): string {
