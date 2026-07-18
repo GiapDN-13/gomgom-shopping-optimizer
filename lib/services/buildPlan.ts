@@ -18,6 +18,9 @@ export interface PlanStore {
   name: string;
   color: string;
   address: string;
+  // real store coordinates (from STORES meta) — drive the route map
+  lat: number;
+  lon: number;
   items: PlanItem[];
   productSubtotal: number;
   deliveryFee: number;
@@ -65,6 +68,8 @@ export function assemblePlan(
       name: meta.name,
       color: meta.color,
       address: meta.address,
+      lat: meta.lat,
+      lon: meta.lon,
       items,
       productSubtotal,
       deliveryFee: meta.deliveryFee,

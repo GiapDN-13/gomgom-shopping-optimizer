@@ -41,7 +41,7 @@ export const KEYWORDS: Record<string, string[]> = {
   chicken: ["thit ga", "dui ga", "uc ga", "ga ta"],
   rice_noodle: ["bun tuoi", "banh pho", "bun kho", "pho kho", "bun"],
   lemongrass: ["sa cay", "sa bam", "cu sa"],
-  fish_sauce: ["mam ruoc", "nuoc mam"],
+  fish_sauce: ["mam ruoc hue", "mam ruoc", "nuoc mam"],
   fresh_herbs: ["rau thom", "hanh la", "ngo gai", "hung que"],
   vegetables: ["rau cai", "ca chua", "cai xanh", "rau muong"],
   tofu: ["dau hu", "dau phu", "tau hu"],
@@ -93,13 +93,31 @@ export function matchesWholeWords(nameNormalized: string | null, kw: string): bo
 
 /**
  * Cheapest-first ordering surfaces things you can't cook with: seed packets
- * ("hạt giống cà chua" beats actual tomatoes on price), seasoning sachets, etc.
+ * ("hạt giống cà chua" beats actual tomatoes on price), seasoning sachets,
+ * multi-item combos, etc.
  */
-const NAME_BLOCKLIST = ["hat giong", "gia vi nem", "huong lieu"];
+const NAME_BLOCKLIST = ["hat giong", "gia vi", "huong lieu", "combo"];
 
-export function isBlockedName(nameNormalized: string | null): boolean {
+/**
+ * Per-ingredient blocklist: products whose name CONTAINS the keyword but are a
+ * different thing ("bánh tráng mắm ruốc" is a snack, not a jar of mắm ruốc).
+ */
+const KEY_BLOCKLIST: Record<string, string[]> = {
+  fish_sauce: ["banh trang", "snack", "banh"],
+  rice_noodle: ["snack", "mi tron"],
+  shrimp_paste: ["banh trang", "snack"],
+  // Raw-meat ingredients: processed products contain the meat keyword but
+  // aren't what a recipe means by "thịt ..." (sausages, jerky, snacks).
+  pork: ["xuc xich", "snack", "kho bo", "kho heo", "banh", "heo ham", "pate", "chao ", "an lien"],
+  beef: ["xuc xich", "snack", "kho bo", "banh", "bo ham", "pate", "an lien"],
+  chicken: ["xuc xich", "snack", "kho ga", "banh", "ga ham", "pate", "an lien"],
+};
+
+export function isBlockedName(nameNormalized: string | null, ingredientKey?: string): boolean {
   if (!nameNormalized) return false;
-  return NAME_BLOCKLIST.some((b) => nameNormalized.includes(b));
+  if (NAME_BLOCKLIST.some((b) => nameNormalized.includes(b))) return true;
+  const perKey = ingredientKey ? KEY_BLOCKLIST[ingredientKey] : undefined;
+  return perKey ? perKey.some((b) => nameNormalized.includes(b)) : false;
 }
 
 /** next/image only accepts https remotes per our config; drop anything else. */
@@ -133,24 +151,34 @@ export async function searchProducts(
 ): Promise<CatalogProduct[]> {
   const supabase = getSupabaseServiceClient();
 
+  // The DB's is_food flag is incomplete (e.g. "Mắm ruốc Huế", "Bún tươi Safoco"
+  // are labeled non-food). Prefer labeled-food rows, but when a keyword finds
+  // nothing there, retry without the flag — word-boundary + blocklist still apply.
+  const attempts: Array<{ kw: string; requireFood: boolean }> = [];
   for (const kw of keywordsFor(ing)) {
+    attempts.push({ kw, requireFood: true });
+    attempts.push({ kw, requireFood: false });
+  }
+
+  for (const { kw, requireFood } of attempts) {
     // Over-fetch: ILIKE gives substring hits; the word-boundary filter below
     // then drops mid-word false positives ("bun" inside "bunapi").
-    const { data, error } = await supabase
+    let query = supabase
       .from("normalized_products")
       .select(ROW_COLUMNS)
-      .eq("is_food", true)
       .eq("in_stock", true)
       .ilike("name_normalized", `%${kw}%`)
       .gt("price", 0)
       .order("price", { ascending: true })
       .limit(limit * 5);
+    if (requireFood) query = query.eq("is_food", true);
+    const { data, error } = await query;
 
     if (error) {
       throw new Error(`Supabase query lỗi: ${error.message}`);
     }
     const rows = (data as DbRow[]).filter(
-      (r) => matchesWholeWords(r.name_normalized, kw) && !isBlockedName(r.name_normalized),
+      (r) => matchesWholeWords(r.name_normalized, kw) && !isBlockedName(r.name_normalized, ing.key),
     );
     // Relevance before price: a name STARTING with the keyword ("ca chua beef")
     // is the item itself; a mid-name hit ("dau sot ca chua") is a derivative.
@@ -167,6 +195,58 @@ export async function searchProducts(
     if (products.length > 0) return products;
   }
   return [];
+}
+
+/**
+ * Cheapest valid product of EACH chain for one ingredient — the input the
+ * distance-aware optimizer needs (it weighs price against travel distance).
+ * Keyword priority is preserved: once a chain is filled by an earlier
+ * (more specific) keyword, later keywords don't overwrite it.
+ */
+export async function cheapestPerStore(
+  ing: IngredientInput,
+): Promise<Partial<Record<StoreCode, CatalogProduct>>> {
+  const supabase = getSupabaseServiceClient();
+  const found: Partial<Record<StoreCode, CatalogProduct>> = {};
+
+  const attempts: Array<{ kw: string; requireFood: boolean }> = [];
+  for (const kw of keywordsFor(ing)) {
+    attempts.push({ kw, requireFood: true });
+    attempts.push({ kw, requireFood: false });
+  }
+
+  for (const { kw, requireFood } of attempts) {
+    if (Object.keys(found).length >= 5) break; // all chains filled
+    let query = supabase
+      .from("normalized_products")
+      .select(ROW_COLUMNS)
+      .eq("in_stock", true)
+      .ilike("name_normalized", `%${kw}%`)
+      .gt("price", 0)
+      .order("price", { ascending: true })
+      .limit(60);
+    if (requireFood) query = query.eq("is_food", true);
+    const { data, error } = await query;
+    if (error) {
+      throw new Error(`Supabase query lỗi: ${error.message}`);
+    }
+    const rows = (data as DbRow[]).filter(
+      (r) => matchesWholeWords(r.name_normalized, kw) && !isBlockedName(r.name_normalized, ing.key),
+    );
+    rows.sort((a, b) => {
+      const aStarts = a.name_normalized?.startsWith(kw) ? 0 : 1;
+      const bStarts = b.name_normalized?.startsWith(kw) ? 0 : 1;
+      if (aStarts !== bStarts) return aStarts - bStarts;
+      return (a.price ?? 0) - (b.price ?? 0);
+    });
+    for (const row of rows) {
+      const product = rowToProduct(row, ing.key);
+      if (product && !found[product.storeCode]) {
+        found[product.storeCode] = product;
+      }
+    }
+  }
+  return found;
 }
 
 /** Real per-store data age in hours, from `source_freshness.last_updated_at`. */
