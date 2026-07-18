@@ -21,6 +21,8 @@ interface Result {
   error: string | null;
   source?: string;
   provider?: string;
+  backend?: string; // final source from the NER service ("hybrid" | "ckey-api")
+  gate?: { score: number; verdict: "pass" | "fail"; reasons: string[] };
 }
 
 // Gomgom Inspector — dark 3-pane debug tool (Stitch "agent_inspector_debug").
@@ -62,6 +64,8 @@ export function InspectorView() {
         error: null,
         source: ner.source,
         provider: ner.provider,
+        backend: ner._backend,
+        gate: ner._gate,
       });
     } catch (e) {
       const totalMs = Math.round(performance.now() - start);
@@ -130,13 +134,23 @@ export function InspectorView() {
       {result?.source && (
         <div className="border-b border-white/10 px-6 py-1.5 text-xs text-white/70">
           Nguồn kết quả:{" "}
-          <span className="font-semibold text-[var(--color-primary-fixed-dim)]">
-            {result.source === "api"
-              ? `API ngoài (${result.provider ?? "external"})`
-              : result.source === "self"
-                ? "Model tự train (GPT-2)"
-                : "Mock"}
+          <span
+            className="font-semibold"
+            style={{ color: result.backend === "ckey-api" ? "#ff7a1b" : "var(--color-primary-fixed-dim)" }}
+          >
+            {result.backend === "ckey-api"
+              ? "API ngoài (Ckey — gate fallback)"
+              : result.source === "api"
+                ? `API ngoài (${result.provider ?? "external"})`
+                : result.source === "self"
+                  ? `Model tự train (${result.backend ?? "hybrid"})`
+                  : "Mock"}
           </span>
+          {result.gate && (
+            <span className="ml-2" title={result.gate.reasons.join("; ") || undefined}>
+              · gate: <b>{result.gate.verdict}</b> ({result.gate.score.toFixed(2)})
+            </span>
+          )}
         </div>
       )}
 

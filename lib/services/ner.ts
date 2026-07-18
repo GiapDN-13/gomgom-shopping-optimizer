@@ -10,6 +10,11 @@ export interface NerResult extends NerResponse {
   raw: NerResponse;
   source?: string; // "self" | "api" | "mock" — provenance label
   provider?: string; // e.g. gemini-2.0-flash, when source === "api"
+  // Verification-gate fields forwarded from the Python NER service (disclosed
+  // architecture): final backend + gate verdict for honest provenance labels.
+  _backend?: string; // "hybrid" | "ckey-api" | ...
+  _gate?: { score: number; verdict: "pass" | "fail"; reasons: string[] };
+  _latency_ms?: { model?: number; api?: number };
 }
 
 /** Calls POST /api/v1/ner. Throws a human-readable Error on failure (NFR-08/25). */
