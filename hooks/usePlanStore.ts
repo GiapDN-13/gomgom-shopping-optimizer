@@ -93,7 +93,12 @@ export const usePlanStore = create<PlanState>((set, get) => ({
       set({ ner, servings, status: "matching" });
       await wait(450);
 
-      const ingredients = recipeFromText(query) ?? nerToIngredients(ner);
+      // MODEL FIRST: the retrained NER knows dish->ingredients (and the gate +
+      // API fallback already vetted its output server-side). The hardcoded
+      // recipe book is only a fallback when the model returns nothing usable
+      // (e.g. "lẩu cá" must not be overridden by the lẩu Thái recipe).
+      const fromModel = nerToIngredients(ner);
+      const ingredients = fromModel.length > 0 ? fromModel : (recipeFromText(query) ?? []);
       set({ status: "optimizing" });
 
       // Real Supabase products via /api/v1/optimize; mock catalog as fallback.
